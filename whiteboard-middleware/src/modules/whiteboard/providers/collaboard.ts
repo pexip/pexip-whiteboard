@@ -4,9 +4,7 @@ import Debug from 'debug'
 
 const debug = Debug('whiteboard-middleware:collaboard')
 
-let authToken = ''
-let refreshToken = ''
-let uniqueDeviceId = uuidv4()
+const uniqueDeviceId = uuidv4()
 
 const url: string = config.get('whiteboard.url')
 const username: string = config.get('whiteboard.username')
@@ -14,9 +12,11 @@ const password: string = config.get('whiteboard.password')
 const appVersion: string = config.get('whiteboard.appVersion')
 
 const createCollaboardLink = async (): Promise<string> => {
-  // TODO: Check if the authentication
-  const authToken = authenticateWithPassword()
-  return await Promise.resolve('')
+  const authToken = await authenticateWithPassword()
+  const projects = await getProjects(authToken)
+  debug(projects)
+  const link = ''
+  return link
 }
 
 /**
@@ -24,7 +24,7 @@ const createCollaboardLink = async (): Promise<string> => {
  * @returns The response with the AuthenticationToken, RefreshToken and username,
  *   between other things.
  */
-const authenticateWithPassword = async (): Promise<Response> => {
+const authenticateWithPassword = async (): Promise<string> => {
   const token = btoa(username + ':' + password)
   const result = await fetch(`${url}/auth/api/Authorization/Authenticate`, {
     method: 'POST',
@@ -37,18 +37,11 @@ const authenticateWithPassword = async (): Promise<Response> => {
       AppVer: appVersion
     })
   })
+  if (result.status !== 200) {
+    throw new Error('Cannot authenticate in Collaboard')
+  }
   debug(result)
-  return result
-}
-
-const authenticateWithRefreshToken = async (refreshToken: string): Promise<Response> => {
-  const result = await fetch(`${url}/auth/api/Authorization/RefreshToken`, {
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${refreshToken}`
-    }
-  })
-  return result
+  return (await result.json()).AuthorizationToken
 }
 
 /**
@@ -84,7 +77,7 @@ const getProjects = async (authToken: string): Promise<any> => {
  * @param projectName - Name for the project that will be used in the description.
  * @returns JSON object with the new project.
  */
-const createProject = async (authToken: string, projectName: string) => {
+const createProject = async (authToken: string, projectName: string): Promise<any> => {
   const result = await fetch(`${url}/api/public/v1.0/CollaborationHub/CreateProject`, {
     method: 'POST',
     headers: {
@@ -97,7 +90,7 @@ const createProject = async (authToken: string, projectName: string) => {
       Description: projectName,
       SpaceId: null
     })
-  });
+  })
   if (result.status === 200) {
     const jsonResult = await result.json()
     return jsonResult
@@ -135,7 +128,7 @@ const deleteProject = async (authToken: string, projectId: number): Promise<void
  * @param projectId - Id of the project that we want to share.
  * @returns Invitation link in a string.
  */
-const createInvitationLink = async (projectId: number): Promise<string> => {
+const createInvitationLink = async (authToken: string, projectId: number): Promise<string> => {
   const result = await fetch(`${url}/api/CollaborationHub/CreateProjectInvitationLink`, {
     method: 'POST',
     headers: {

@@ -10,7 +10,7 @@
   },
   "whiteboard": {
       "provider": "collaboard",
-      "url": "https://web.collaboard.app",
+      "url": "https://api.collaboard.app",
       "username": "",
       "password": "",
       "appVersion": "6.0.0"

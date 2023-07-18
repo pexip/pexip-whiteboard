@@ -37,7 +37,6 @@ const getConnection = (connectionUuid: string): Connection | undefined => {
 const handleCreate = async (connection: Connection): Promise<void> => {
   await checkIfParticipantIsAllowed(connection.conference, connection.participantUuid)
   await createWhiteboardLink()
-  // TODO: Send 200 OK
 }
 
 const sendError = (ws: WebSocket, error: string): void => {
@@ -85,9 +84,6 @@ export const WsRouter = (): any => {
       switch (msgParsed.type) {
         case MessageType.Create: {
           handleCreate(connection)
-            .then(() => {
-              ws.send('OK')
-            })
             .catch((error) => {
               sendError(ws, error.toString())
             })
