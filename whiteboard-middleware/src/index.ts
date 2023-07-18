@@ -5,6 +5,7 @@ import config from 'config'
 import ExpressWs from 'express-ws'
 
 import wsRouter from './routes/ws'
+import { Provider } from './modules/whiteboard/providers/provider'
 
 if (!config.has('server.address')) {
   console.error('Server Address not present in config file')
@@ -26,7 +27,7 @@ if (!config.has('infinity.password')) {
   console.error('Infinity password not present in config file')
   process.exit(1)
 }
-if (!config.has('whiteboard.url')) {
+if (!config.has('whiteboard.provider')) {
   console.error('Whiteboard provider not present in config file')
   process.exit(1)
 }
@@ -40,6 +41,12 @@ if (!config.has('whiteboard.username')) {
 }
 if (!config.has('whiteboard.password')) {
   console.error('Whiteboard password not present in config file')
+  process.exit(1)
+}
+
+const provider: string = config.get('whiteboard.provider')
+if (!Object.values(Provider).includes(provider as Provider)) {
+  console.error(`Whiteboard provider should be one of the following: ${Object.values(Provider).join(', ')}.`)
   process.exit(1)
 }
 

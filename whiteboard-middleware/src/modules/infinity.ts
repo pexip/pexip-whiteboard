@@ -1,7 +1,7 @@
 import config from 'config'
 import Debug from 'debug'
 
-const debug = Debug('collaboard-middleware:infinity')
+const debug = Debug('whiteboard-middleware:infinity')
 
 interface InfinityParticipant {
   bandwidth: number
@@ -51,18 +51,35 @@ interface InfinityParticipant {
   vendor: string
 }
 
+const checkIfParticipantIsAllowed = async (conference: string, participantUuid: string): Promise<void> => {
+  let participants: InfinityParticipant[] = []
+  try {
+    participants = await getParticipants(conference)
+  } catch (error: any) {
+    throw new Error('Cannot verify conference')
+  }
+  const participant = participants.find((participant) => participant.call_uuid === participantUuid)
+  if (participant == null) {
+    throw new Error(`Participant ${participantUuid} cannot be found in conference ${conference}`)
+  }
+  if (participant.role !== 'chair') {
+    throw new Error(`Participant ${participantUuid} doesn't have enough permissions`)
+  }
+}
+
 const getParticipants = async (conference: string): Promise<InfinityParticipant[]> => {
   const url: string = config.get('infinity.url')
   const username: string = config.get('infinity.username')
   const password: string = config.get('infinity.password')
 
+  debug(`Getting participants for conferece "${conference}"`)
   const response = await fetch(url + '/api/admin/status/v1/participant/?conference=' + conference, {
     headers: {
       Authorization: `Basic ${btoa(username + ':' + password)}`
     }
   })
-
   debug(response)
+
   let error = ''
   let participants = []
   switch (response.status) {
@@ -88,8 +105,5 @@ const getParticipants = async (conference: string): Promise<InfinityParticipant[
 }
 
 export {
-  getParticipants
-}
-export type {
-  InfinityParticipant
+  checkIfParticipantIsAllowed
 }

@@ -1,8 +1,11 @@
 import express from 'express'
-import { getParticipants } from '../modules/infinity'
-import type { InfinityParticipant } from '../modules/infinity'
+import Debug from 'debug'
 import { v4 as uuidv4 } from 'uuid'
 import type WebSocket from 'ws'
+import { checkIfParticipantIsAllowed } from '../modules/infinity'
+import { createWhiteboardLink } from '../modules/whiteboard/whiteboard'
+
+const debug = Debug('whiteboard-middleware:ws')
 
 const prefixMessageType = 'whiteboard'
 const router = express.Router()
@@ -32,21 +35,9 @@ const getConnection = (connectionUuid: string): Connection | undefined => {
 }
 
 const handleCreate = async (connection: Connection): Promise<void> => {
-  let participants: InfinityParticipant[] = []
-  try {
-    participants = await getParticipants(connection.conference)
-  } catch (error: any) {
-    throw new Error('Cannot create the whiteboard')
-  }
-  const participant = participants.find((participant) => participant.call_uuid === connection.participantUuid)
-  if (participant == null) {
-    throw new Error(`Participant ${connection.participantUuid} cannot be found in conference ${connection.conference}`)
-  }
-  if (participant.role !== 'chair') {
-    throw new Error(`Participant ${connection.participantUuid} doesn't have enough permissions`)
-  }
-  // TODO: Create the whiteboard
-  console.log('continue')
+  await checkIfParticipantIsAllowed(connection.conference, connection.participantUuid)
+  await createWhiteboardLink()
+  // TODO: Send 200 OK
 }
 
 const sendError = (ws: WebSocket, error: string): void => {
@@ -54,6 +45,7 @@ const sendError = (ws: WebSocket, error: string): void => {
     type: MessageType.Error,
     body: error
   }
+  debug(error)
   ws.send(JSON.stringify(response))
 }
 
@@ -78,16 +70,18 @@ export const WsRouter = (): any => {
     ws.on('message', (msg) => {
       const connection = getConnection(connectionUuid)
       if (connection == null) {
-        const response: WebSocketMessage = {
-          type: MessageType.Error,
-          body: 'Cannot find the connection'
-        }
-        ws.send(JSON.stringify(response))
+        sendError(ws, 'Error: Cannot find the connection')
         return
       }
 
-      // eslint-disable-next-line @typescript-eslint/no-base-to-string
-      const msgParsed = JSON.parse(msg.toString())
+      let msgParsed
+      try {
+        // eslint-disable-next-line @typescript-eslint/no-base-to-string
+        msgParsed = JSON.parse(msg.toString())
+      } catch (error) {
+        sendError(ws, 'Error: Cannot parse message')
+        return
+      }
       switch (msgParsed.type) {
         case MessageType.Create: {
           handleCreate(connection)
@@ -95,21 +89,12 @@ export const WsRouter = (): any => {
               ws.send('OK')
             })
             .catch((error) => {
-              console.error(error)
-              const response: WebSocketMessage = {
-                type: MessageType.Error,
-                body: error.toString()
-              }
-              ws.send(JSON.stringify(response))
+              sendError(ws, error.toString())
             })
           break
         }
         default: {
-          const response: WebSocketMessage = {
-            type: MessageType.Error,
-            body: 'Unsupported message type'
-          }
-          ws.send(JSON.stringify(response))
+          sendError(ws, 'Error: Unsupported message type')
         }
       }
     })
