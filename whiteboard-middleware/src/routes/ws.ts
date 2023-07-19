@@ -7,13 +7,13 @@ import { createWhiteboardLink } from '../modules/whiteboard/whiteboard'
 
 const debug = Debug('whiteboard-middleware:ws')
 
-const prefixMessageType = 'whiteboard'
 const router = express.Router()
 
 enum MessageType {
-  Create = `${prefixMessageType}:create`,
-  Invited = `${prefixMessageType}:invited`,
-  Error = `${prefixMessageType}:error`
+  Create = 'create',
+  Created = 'created',
+  Invited = 'invited',
+  Error = 'error'
 }
 
 interface WebSocketMessage {
@@ -22,7 +22,7 @@ interface WebSocketMessage {
 }
 
 interface Connection {
-  connectionUuid: string
+  uuid: string
   ws: WebSocket
   conference: string
   participantUuid: string
@@ -31,12 +31,22 @@ interface Connection {
 const connections: Connection[] = []
 
 const getConnection = (connectionUuid: string): Connection | undefined => {
-  return connections.find((connection) => connection.connectionUuid === connectionUuid)
+  return connections.find((connection) => connection.uuid === connectionUuid)
 }
 
 const handleCreate = async (connection: Connection): Promise<void> => {
   await checkIfParticipantIsAllowed(connection.conference, connection.participantUuid)
-  await createWhiteboardLink()
+  const link = await createWhiteboardLink(connection.conference)
+  connections.forEach((conn) => {
+    if (conn.conference === connection.conference) {
+      const isCreator = conn.uuid === connection.uuid
+      const message: WebSocketMessage = {
+        type: isCreator ? MessageType.Created : MessageType.Invited,
+        body: link
+      }
+      conn.ws.send(JSON.stringify(message))
+    }
+  })
 }
 
 const sendError = (ws: WebSocket, error: string): void => {
@@ -52,7 +62,7 @@ export const WsRouter = (): any => {
   router.ws('/:conference/:participantUuid', (ws, req, next) => {
     const connectionUuid = uuidv4()
     connections.push({
-      connectionUuid,
+      uuid: connectionUuid,
       ws,
       conference: req.params.conference,
       participantUuid: req.params.participantUuid
@@ -60,7 +70,7 @@ export const WsRouter = (): any => {
 
     ws.on('close', () => {
       connections.forEach((connection, index) => {
-        if (connection.connectionUuid === connectionUuid) {
+        if (connection.uuid === connectionUuid) {
           connections.splice(index, 1)
         }
       })

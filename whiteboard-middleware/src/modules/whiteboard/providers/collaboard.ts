@@ -9,20 +9,59 @@ const uniqueDeviceId = uuidv4()
 const url: string = config.get('whiteboard.url')
 const username: string = config.get('whiteboard.username')
 const password: string = config.get('whiteboard.password')
+const appUrl: string = config.get('whiteboard.appUrl')
 const appVersion: string = config.get('whiteboard.appVersion')
 
-const createCollaboardLink = async (): Promise<string> => {
+interface ProjectData {
+  CanvasSizeRatio: number
+  ProjectId: number
+  Description: string
+  Type: number
+  ContainerUri: string
+  BackgroundColor: string
+  CreatedByUser: string
+  CreatedByUniqueMachineId: string
+  CreationDate: string
+  UpdatedByUser: string
+  LastUpdate: string
+  Presenter: string | null
+}
+
+interface Project {
+  Project: ProjectData
+  ThumbnailUrl: string
+  Permission: number
+  IsLicensed: true
+  LastAccessDate: string
+  NumberOfParticipants: number
+}
+
+const createCollaboardLink = async (conference: string): Promise<string> => {
   const authToken = await authenticateWithPassword()
-  const projects = await getProjects(authToken)
-  debug(projects)
-  const link = ''
+  let project: Project | null = null
+  let end = false
+  const pageSize = 20
+  let pageNumber = 1
+  while (!end && project == null) {
+    const projects = await getProjects(authToken, pageSize, pageNumber)
+    project = projects.find((project: Project) => project.Project.Description === conference)
+    if (projects.length < pageSize) {
+      end = true
+    } else {
+      pageNumber++
+    }
+  }
+  if (project != null) {
+    await deleteProject(authToken, project.Project.ProjectId)
+  }
+  const projectId = await createProject(authToken, conference)
+  const link = await createInvitationLink(authToken, projectId)
   return link
 }
 
 /**
  * Obtain an access token using for that the username and password.
- * @returns The response with the AuthenticationToken, RefreshToken and username,
- *   between other things.
+ * @returns Return only the AuthorizationToken
  */
 const authenticateWithPassword = async (): Promise<string> => {
   const token = btoa(username + ':' + password)
@@ -49,7 +88,7 @@ const authenticateWithPassword = async (): Promise<string> => {
  * @param authToken - Token that was obtained in the authentication process.
  * @returns
  */
-const getProjects = async (authToken: string): Promise<any> => {
+const getProjects = async (authToken: string, pageSize: number, pageNumber: number): Promise<any> => {
   const result = await fetch(`${url}/api/public/v1.0/CollaborationHub/GetMyProjects`, {
     method: 'POST',
     headers: {
@@ -59,43 +98,17 @@ const getProjects = async (authToken: string): Promise<any> => {
     body: JSON.stringify({
       UniqueDeviceId: uniqueDeviceId,
       AppVer: appVersion,
-      PageSize: 20,
-      PageNumber: 1,
+      PageSize: pageSize,
+      PageNumber: pageNumber,
       WantsCount: true,
       SpaceId: null
     })
   })
   if (result.status === 200) {
     const jsonResult = await result.json()
+    debug(jsonResult)
     return jsonResult.Results
   }
-}
-
-/**
- * Create a new empty project in collaboard.
- * @param authToken - Token that was obtained in the authentication process.
- * @param projectName - Name for the project that will be used in the description.
- * @returns JSON object with the new project.
- */
-const createProject = async (authToken: string, projectName: string): Promise<any> => {
-  const result = await fetch(`${url}/api/public/v1.0/CollaborationHub/CreateProject`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${authToken}`
-    },
-    body: JSON.stringify({
-      UniqueDeviceId: 'c0bd411b-783c-42ef-b1f3-f5de2373538a',
-      AppVer: appVersion,
-      Description: projectName,
-      SpaceId: null
-    })
-  })
-  if (result.status === 200) {
-    const jsonResult = await result.json()
-    return jsonResult
-  }
-  throw Error('Cannot create a Collaboard project')
 }
 
 /**
@@ -117,10 +130,37 @@ const deleteProject = async (authToken: string, projectId: number): Promise<void
       ProjectId: projectId
     })
   })
-  if (result.status === 200) {
-    return
+  if (result.status !== 200) {
+    throw Error('Cannot delete a collaboard project')
   }
-  throw Error('Cannot delete a collaboard project')
+}
+
+/**
+ * Create a new empty project in collaboard.
+ * @param authToken - Token that was obtained in the authentication process.
+ * @param projectName - Name for the project that will be used in the description.
+ * @returns JSON object with the new project.
+ */
+const createProject = async (authToken: string, projectName: string): Promise<number> => {
+  const result = await fetch(`${url}/api/public/v1.0/CollaborationHub/CreateProject`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${authToken}`
+    },
+    body: JSON.stringify({
+      UniqueDeviceId: uniqueDeviceId,
+      AppVer: appVersion,
+      Description: projectName,
+      SpaceId: null
+    })
+  })
+  if (result.status !== 200) {
+    throw Error('Cannot create a Collaboard project')
+  }
+  const jsonResult = await result.json()
+  debug(jsonResult)
+  return jsonResult.ProjectId
 }
 
 /**
@@ -143,14 +183,15 @@ const createInvitationLink = async (authToken: string, projectId: number): Promi
       GuestPermission: 0,
       ValidForMinutes: 60,
       GuestIdentificationRequired: true,
-      InvitationUrl: `${url}/acceptProjectInvitation`
+      InvitationUrl: `${appUrl}/acceptProjectInvitation`
     })
   })
-  if (result.status === 200) {
-    const jsonResult = await result.json()
-    return jsonResult.InvitationUrl
+  if (result.status !== 200) {
+    throw Error('Cannot create invitation to a collaboard project')
   }
-  throw Error('Cannot send invitation to a collaboard project')
+  const jsonResult = await result.json()
+  debug(jsonResult)
+  return jsonResult.InvitationUrl
 }
 
 export {

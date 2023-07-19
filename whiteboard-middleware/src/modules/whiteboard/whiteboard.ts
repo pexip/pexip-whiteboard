@@ -3,16 +3,16 @@ import { Provider } from './providers/provider'
 import { createCollaboardLink } from './providers/collaboard'
 import { createConceptboardLink } from './providers/conceptboard'
 
-const createWhiteboardLink = async (): Promise<string> => {
+const createWhiteboardLink = async (conference: string): Promise<string> => {
   const provider = config.get('whiteboard.provider')
   let link = ''
   switch (provider) {
     case Provider.Collaboard: {
-      link = await createCollaboardLink()
+      link = await createCollaboardLink(conference)
       break
     }
     case Provider.Conceptboard: {
-      link = await createConceptboardLink()
+      link = await createConceptboardLink(conference)
       break
     }
   }

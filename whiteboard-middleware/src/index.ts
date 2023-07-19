@@ -49,6 +49,16 @@ if (!Object.values(Provider).includes(provider as Provider)) {
   console.error(`Whiteboard provider should be one of the following: ${Object.values(Provider).join(', ')}.`)
   process.exit(1)
 }
+if (config.get('whiteboard.provider') === Provider.Collaboard) {
+  if (!config.has('whiteboard.appUrl')) {
+    console.error('Whiteboard appUrl not present in config file')
+    process.exit(1)
+  }
+  if (!config.has('whiteboard.appVersion')) {
+    console.error('Whiteboard appVersion not present in config file')
+    process.exit(1)
+  }
+}
 
 if (config.has('verifyCertificates') && config.get('verifyCertificates') === false) {
   process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0'
@@ -56,6 +66,8 @@ if (config.has('verifyCertificates') && config.get('verifyCertificates') === fal
 
 const address: string = config.get('server.address')
 const port: string = config.get('server.port')
+
+// TODO: Purge all old whiteboards
 
 const app = express()
 ExpressWs(app)

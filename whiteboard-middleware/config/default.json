@@ -11,8 +11,9 @@
   "whiteboard": {
       "provider": "collaboard",
       "url": "https://api.collaboard.app",
-      "username": "",
+      "username": "marcoscereijo@gmail.com",
       "password": "",
+      "appUrl": "https://web.collaboard.app",
       "appVersion": "6.0.0"
   },
   "verifyCertificates": false
