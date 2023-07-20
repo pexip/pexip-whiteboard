@@ -7,6 +7,6 @@
   "javascript.preferences.quoteStyle": "single",
   "editor.rulers": [80,120],
   "eslint.workingDirectories": [
-    "./whiteboard-middleware"
+    "./server"
   ]
 }

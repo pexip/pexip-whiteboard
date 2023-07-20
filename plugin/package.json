@@ -1,5 +1,5 @@
 {
-  "name": "collaboard",
+  "name": "whiteboard",
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
@@ -15,8 +15,8 @@
     "@pexip/plugin-api": "17.6.1"
   },
   "devDependencies": {
-    "prettier": "^2.7.1",
-    "typescript": "^4.8.4",
-    "vite": "^3.2.2"
+    "prettier": "^3.0.0",
+    "typescript": "^5.1.6",
+    "vite": "^4.4.4"
   }
 }

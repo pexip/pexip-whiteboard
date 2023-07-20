@@ -36,6 +36,10 @@ interface Project {
   NumberOfParticipants: number
 }
 
+const checkCollaboardConnection = async (): Promise<void> => {
+  await authenticateWithPassword()
+}
+
 const createCollaboardLink = async (conference: string): Promise<string> => {
   const authToken = await authenticateWithPassword()
   let project: Project | null = null
@@ -65,22 +69,28 @@ const createCollaboardLink = async (conference: string): Promise<string> => {
  */
 const authenticateWithPassword = async (): Promise<string> => {
   const token = btoa(username + ':' + password)
-  const result = await fetch(`${url}/auth/api/Authorization/Authenticate`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Basic ${token}`
-    },
-    body: JSON.stringify({
-      UniqueDeviceId: uniqueDeviceId,
-      AppVer: appVersion
+  let response: Response
+  try {
+    response = await fetch(`${url}/auth/api/Authorization/Authenticate`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Basic ${token}`
+      },
+      body: JSON.stringify({
+        UniqueDeviceId: uniqueDeviceId,
+        AppVer: appVersion
+      })
     })
-  })
-  if (result.status !== 200) {
-    throw new Error('Cannot authenticate in Collaboard')
+  } catch (error) {
+    throw new Error('Cannot connect to Collaboard.')
   }
-  debug(result)
-  return (await result.json()).AuthorizationToken
+
+  if (response.status !== 200) {
+    throw new Error('Cannot authenticate in Collaboard.')
+  }
+  debug(response)
+  return (await response.json()).AuthorizationToken
 }
 
 /**
@@ -131,7 +141,7 @@ const deleteProject = async (authToken: string, projectId: number): Promise<void
     })
   })
   if (result.status !== 200) {
-    throw Error('Cannot delete a collaboard project')
+    throw Error('Cannot delete a collaboard project.')
   }
 }
 
@@ -187,7 +197,7 @@ const createInvitationLink = async (authToken: string, projectId: number): Promi
     })
   })
   if (result.status !== 200) {
-    throw Error('Cannot create invitation to a collaboard project')
+    throw Error('Cannot create invitation to a collaboard project.')
   }
   const jsonResult = await result.json()
   debug(jsonResult)
@@ -195,5 +205,6 @@ const createInvitationLink = async (authToken: string, projectId: number): Promi
 }
 
 export {
+  checkCollaboardConnection,
   createCollaboardLink
 }

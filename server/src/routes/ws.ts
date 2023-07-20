@@ -2,8 +2,8 @@ import express from 'express'
 import Debug from 'debug'
 import { v4 as uuidv4 } from 'uuid'
 import type WebSocket from 'ws'
-import { checkIfParticipantIsAllowed } from '../modules/infinity'
-import { createWhiteboardLink } from '../modules/whiteboard/whiteboard'
+import { checkIfParticipantIsAllowed } from '../infinity'
+import { createWhiteboardLink } from '../whiteboard/whiteboard'
 
 const debug = Debug('whiteboard-middleware:ws')
 
