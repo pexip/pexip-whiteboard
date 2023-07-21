@@ -1,16 +1,25 @@
 import config from 'config'
 import { v4 as uuidv4 } from 'uuid'
 import Debug from 'debug'
+import type { ConfigProvider } from '../../config'
+import { Provider } from './provider'
 
 const debug = Debug('whiteboard-middleware:collaboard')
 
 const uniqueDeviceId = uuidv4()
 
-const url: string = config.get('whiteboard.url')
-const username: string = config.get('whiteboard.username')
-const password: string = config.get('whiteboard.password')
-const appUrl: string = config.get('whiteboard.appUrl')
-const appVersion: string = config.get('whiteboard.appVersion')
+const providers: ConfigProvider[] = config.get('whiteboard.providers')
+const provider = providers.find((provider) => provider.id === Provider.Collaboard)
+
+if (provider == null) {
+  throw new Error('Cannot find provider config for Collaboard.')
+}
+
+const url: string = provider.url
+const username: string = provider.username ?? ''
+const password: string = provider.password ?? ''
+const appUrl: string = provider.appUrl ?? ''
+const appVersion: string = provider.appVersion ?? ''
 
 interface ProjectData {
   CanvasSizeRatio: number
@@ -114,6 +123,7 @@ const getProjects = async (authToken: string, pageSize: number, pageNumber: numb
       SpaceId: null
     })
   })
+  debug(result)
   if (result.status === 200) {
     const jsonResult = await result.json()
     debug(jsonResult)

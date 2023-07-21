@@ -1,4 +1,3 @@
-import config from 'config'
 import { Provider } from './providers/provider'
 import {
   checkCollaboardConnection,
@@ -9,9 +8,7 @@ import {
   createConceptboardLink
 } from './providers/conceptboard'
 
-const provider = config.get('whiteboard.provider')
-
-const checkWhiteboardConnection = async (): Promise<void> => {
+const checkWhiteboardConnection = async (provider: Provider): Promise<void> => {
   switch (provider) {
     case Provider.Collaboard: {
       await checkCollaboardConnection()
@@ -24,7 +21,7 @@ const checkWhiteboardConnection = async (): Promise<void> => {
   }
 }
 
-const createWhiteboardLink = async (conference: string): Promise<string> => {
+const createWhiteboardLink = async (provider: Provider, conference: string): Promise<string> => {
   let link = ''
   switch (provider) {
     case Provider.Collaboard: {

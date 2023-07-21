@@ -4,6 +4,8 @@ import { v4 as uuidv4 } from 'uuid'
 import type WebSocket from 'ws'
 import { checkIfParticipantIsAllowed } from '../infinity'
 import { createWhiteboardLink } from '../whiteboard/whiteboard'
+import config from 'config'
+import type { Provider } from '../whiteboard/providers/provider'
 
 const debug = Debug('whiteboard-middleware:ws')
 
@@ -34,9 +36,14 @@ const getConnection = (connectionUuid: string): Connection | undefined => {
   return connections.find((connection) => connection.uuid === connectionUuid)
 }
 
-const handleCreate = async (connection: Connection): Promise<void> => {
-  await checkIfParticipantIsAllowed(connection.conference, connection.participantUuid)
-  const link = await createWhiteboardLink(connection.conference)
+const handleCreate = async (connection: Connection, provider: Provider): Promise<void> => {
+  if (!config.has('validateInfinityConference') || config.get('validateInfinityConference')) {
+    await checkIfParticipantIsAllowed(connection.conference, connection.participantUuid)
+  }
+  if (provider == null) {
+    provider = config.get('whiteboard.defaultProvider') ?? config.get('whiteboard.providers[0].id')
+  }
+  const link = await createWhiteboardLink(provider, connection.conference)
   connections.forEach((conn) => {
     if (conn.conference === connection.conference) {
       const isCreator = conn.uuid === connection.uuid
@@ -93,7 +100,7 @@ export const WsRouter = (): any => {
       }
       switch (msgParsed.type) {
         case MessageType.Create: {
-          handleCreate(connection)
+          handleCreate(connection, msgParsed.body)
             .catch((error) => {
               sendError(ws, error.toString())
             })

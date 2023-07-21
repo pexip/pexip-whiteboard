@@ -5,9 +5,11 @@ import config from 'config'
 import ExpressWs from 'express-ws'
 
 import { checkConfig } from './config'
+import type { ConfigProvider } from './config'
 import wsRouter from './routes/ws'
 import { checkInfinityConnection } from './infinity'
 import { checkWhiteboardConnection } from './whiteboard/whiteboard'
+import type { Provider } from './whiteboard/providers/provider'
 
 const main = async (): Promise<void> => {
   checkConfig()
@@ -17,7 +19,10 @@ const main = async (): Promise<void> => {
   }
 
   await checkInfinityConnection()
-  await checkWhiteboardConnection()
+  const providers: ConfigProvider[] = config.get('whiteboard.providers')
+  for (let i = 0; i < providers.length; i++) {
+    await checkWhiteboardConnection(providers[i].id as Provider)
+  }
 
   const address: string = config.get('server.address')
   const port: string = config.get('server.port')

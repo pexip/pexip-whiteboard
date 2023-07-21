@@ -1,3 +1,4 @@
 {
-  "server": "ws://localhost:3000"
+  "server": "ws://localhost:3000",
+  "whiteboardProvider": "conceptboard"
 }

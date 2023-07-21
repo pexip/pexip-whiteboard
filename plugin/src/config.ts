@@ -1,5 +1,6 @@
 interface Config {
   server: string
+  whiteboardProvider?: string
 }
 
 const response = await fetch('./config.json');

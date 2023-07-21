@@ -1,3 +1,6 @@
+# Don't commit server config by default since it can contain passwords
+server/config/default.json
+
 node_modules
 
 # Logs
