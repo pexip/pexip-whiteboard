@@ -17,8 +17,9 @@ const main = async (): Promise<void> => {
   if (config.has('verifyCertificates') && config.get('verifyCertificates') === false) {
     process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0'
   }
-
-  await checkInfinityConnection()
+  if (!config.has('validateInfinityConference') || config.get('validateInfinityConference')) {
+    await checkInfinityConnection()
+  }
   const providers: ConfigProvider[] = config.get('whiteboard.providers')
   for (let i = 0; i < providers.length; i++) {
     await checkWhiteboardConnection(providers[i].id as Provider)

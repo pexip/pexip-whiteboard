@@ -1,0 +1,12 @@
+version: '3'
+
+services:
+  server:
+    build:
+      context: server
+    container_name: whiteboard-server
+    restart: unless-stopped
+    ports:
+      - "5000:3000"
+    volumes:
+      - /home/veridas/whiteboard/server/config:/server/config
