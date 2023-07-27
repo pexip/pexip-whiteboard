@@ -1,6 +1,6 @@
 {
   "name": "whiteboard-server",
-  "version": "0.0.0",
+  "version": "1.0.0",
   "private": true,
   "scripts": {
     "start": "nodemon ./src/index.ts",
