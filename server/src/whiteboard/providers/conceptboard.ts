@@ -1,9 +1,6 @@
 import config from 'config'
 import type { ConfigProvider } from '../../config'
 import { Provider } from './provider'
-import Debug from 'debug'
-
-const debug = Debug('whiteboard-middleware:conceptboard')
 
 const providers: ConfigProvider[] = config.get('whiteboard.providers')
 const provider = providers.find((provider) => provider.id === Provider.Conceptboard)
@@ -21,7 +18,6 @@ const createConceptboardLink = async (conference: string): Promise<string> => {
   if (response.status !== 200) {
     throw new Error('Cannot create the whiteboard')
   }
-  debug('Created Concepboard whiteboard')
   return response.url
 }
 

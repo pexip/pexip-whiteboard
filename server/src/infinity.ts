@@ -1,7 +1,7 @@
 import config from 'config'
 import Debug from 'debug'
 
-const debug = Debug('whiteboard-middleware:infinity')
+const debug = Debug('whiteboard-server:infinity')
 
 interface InfinityParticipant {
   bandwidth: number
@@ -57,6 +57,7 @@ const password: string = config.get('infinity.password')
 
 const checkInfinityConnection = async (): Promise<void> => {
   let response: Response
+  debug('Checking Infinity connection...')
   try {
     response = await fetch(`${url}/api/admin/status/v1/management_vm/`, {
       headers: {
@@ -69,6 +70,7 @@ const checkInfinityConnection = async (): Promise<void> => {
 
   switch (response.status) {
     case 200: {
+      debug('Infinity connection OK!')
       break
     }
     case 401: {

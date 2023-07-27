@@ -1,4 +1,4 @@
-import { Plugin } from '@pexip/plugin-api';
+import { Plugin, Prompt } from '@pexip/plugin-api';
 
 const popUpId = 'open-whiteboard-link';
 
@@ -11,7 +11,7 @@ try{
 }
 
 let plugin: Plugin;
-let ws: WebSocket;
+let currentPanel: Prompt;
 
 const initializePanels = (plugin_rcv: Plugin) => {
   plugin = plugin_rcv;
@@ -25,7 +25,10 @@ const initializePanels = (plugin_rcv: Plugin) => {
 
 const showCreatePanel = async (callback: () => void) => {
   const primaryAction = 'Continue';
-  const prompt = await plugin.ui.addPrompt({
+  if (currentPanel != null) {
+    currentPanel.remove();
+  }
+  currentPanel = await plugin.ui.addPrompt({
     title: 'Create whiteboard',
     description: 'You will create a whiteboard and send an invitation to all ' +
       'the other participants. Do you want to continue?',
@@ -34,8 +37,8 @@ const showCreatePanel = async (callback: () => void) => {
       secondaryAction: 'Cancel'
     }
   });
-  prompt.onInput.add(async (result: any) => {
-    await prompt.remove()
+  currentPanel.onInput.add(async (result: any) => {
+    await currentPanel.remove()
     if (result === primaryAction) {
       callback();
     }
@@ -44,6 +47,9 @@ const showCreatePanel = async (callback: () => void) => {
 
 const showCreatedPanel = async (title: string, description: string, link: string): Promise<void> => {
   const primaryAction = 'Open';
+  if (currentPanel != null) {
+    currentPanel.remove();
+  }
   if (sameDomain) {
     await plugin.ui.showPrompt({
       title,
@@ -62,7 +68,7 @@ const showCreatedPanel = async (title: string, description: string, link: string
       }
     });
   } else {
-    const prompt = await plugin.ui.addPrompt({
+    currentPanel = await plugin.ui.addPrompt({
       title,
       description,
       prompt: {
@@ -71,8 +77,8 @@ const showCreatedPanel = async (title: string, description: string, link: string
       }
     });
 
-    prompt.onInput.add(async (result: any) => {
-      await prompt.remove();
+    currentPanel.onInput.add(async (result: any) => {
+      await currentPanel.remove();
       if (result === primaryAction) {
         window.open(link, '', 'width=800,height=600');
       }
@@ -81,13 +87,14 @@ const showCreatedPanel = async (title: string, description: string, link: string
 }
 
 const showErrorPanel = async (error: string): Promise<void> => {
-  await plugin.ui.showPrompt({
+  currentPanel = await plugin.ui.addPrompt({
     title: 'Error',
     description: error,
     prompt: {
       primaryAction: 'Close'
     }
   });
+  currentPanel.onInput.add(() => currentPanel.remove());
 }
 
 export {

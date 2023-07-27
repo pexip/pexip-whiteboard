@@ -1,10 +1,7 @@
 import config from 'config'
 import { v4 as uuidv4 } from 'uuid'
-import Debug from 'debug'
 import type { ConfigProvider } from '../../config'
 import { Provider } from './provider'
-
-const debug = Debug('whiteboard-middleware:collaboard')
 
 const uniqueDeviceId = uuidv4()
 
@@ -98,7 +95,6 @@ const authenticateWithPassword = async (): Promise<string> => {
   if (response.status !== 200) {
     throw new Error('Cannot authenticate in Collaboard.')
   }
-  debug(response)
   return (await response.json()).AuthorizationToken
 }
 
@@ -123,10 +119,8 @@ const getProjects = async (authToken: string, pageSize: number, pageNumber: numb
       SpaceId: null
     })
   })
-  debug(result)
   if (result.status === 200) {
     const jsonResult = await result.json()
-    debug(jsonResult)
     return jsonResult.Results
   }
 }
@@ -179,7 +173,6 @@ const createProject = async (authToken: string, projectName: string): Promise<nu
     throw Error('Cannot create a Collaboard project')
   }
   const jsonResult = await result.json()
-  debug(jsonResult)
   return jsonResult.ProjectId
 }
 
@@ -210,7 +203,6 @@ const createInvitationLink = async (authToken: string, projectId: number): Promi
     throw Error('Cannot create invitation to a collaboard project.')
   }
   const jsonResult = await result.json()
-  debug(jsonResult)
   return jsonResult.InvitationUrl
 }
 

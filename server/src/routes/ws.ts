@@ -1,13 +1,12 @@
 import express from 'express'
-import Debug from 'debug'
-import { v4 as uuidv4 } from 'uuid'
 import type WebSocket from 'ws'
 import { checkIfParticipantIsAllowed } from '../infinity'
 import { createWhiteboardLink } from '../whiteboard/whiteboard'
 import config from 'config'
 import type { Provider } from '../whiteboard/providers/provider'
+import Debug from 'debug'
 
-const debug = Debug('whiteboard-middleware:ws')
+const debug = Debug('whiteboard-server:ws')
 
 const router = express.Router()
 
@@ -24,7 +23,6 @@ interface WebSocketMessage {
 }
 
 interface Connection {
-  uuid: string
   ws: WebSocket
   conference: string
   participantUuid: string
@@ -32,8 +30,8 @@ interface Connection {
 
 const connections: Connection[] = []
 
-const getConnection = (connectionUuid: string): Connection | undefined => {
-  return connections.find((connection) => connection.uuid === connectionUuid)
+const getConnection = (participantUuid: string): Connection | undefined => {
+  return connections.find((connection) => connection.participantUuid === participantUuid)
 }
 
 const handleCreate = async (connection: Connection, provider: Provider): Promise<void> => {
@@ -43,17 +41,24 @@ const handleCreate = async (connection: Connection, provider: Provider): Promise
   if (provider == null) {
     provider = config.get('whiteboard.defaultProvider') ?? config.get('whiteboard.providers[0].id')
   }
+  debug(`Creating Whiteboard by user: ${connection.participantUuid}...`)
   const link = await createWhiteboardLink(provider, connection.conference)
+  debug('Whiteboard created!')
+  const participants: string[] = []
   connections.forEach((conn) => {
     if (conn.conference === connection.conference) {
-      const isCreator = conn.uuid === connection.uuid
+      const isCreator = conn.participantUuid === connection.participantUuid
       const message: WebSocketMessage = {
         type: isCreator ? MessageType.Created : MessageType.Invited,
         body: link
       }
       conn.ws.send(JSON.stringify(message))
+      if (!isCreator) participants.push(conn.participantUuid)
     }
   })
+  if (participants.length > 0) {
+    debug(`Whiteboard shared with following participants: ${participants.join(', ')}.`)
+  }
 }
 
 const sendError = (ws: WebSocket, error: string): void => {
@@ -67,24 +72,25 @@ const sendError = (ws: WebSocket, error: string): void => {
 
 export const WsRouter = (): any => {
   router.ws('/:conference/:participantUuid', (ws, req, next) => {
-    const connectionUuid = uuidv4()
+    debug(`Participant connected: ${req.params.participantUuid}`)
+    const participantUuid = req.params.participantUuid
     connections.push({
-      uuid: connectionUuid,
       ws,
       conference: req.params.conference,
       participantUuid: req.params.participantUuid
     })
 
     ws.on('close', () => {
+      debug(`Participant disconnected: ${participantUuid}`)
       connections.forEach((connection, index) => {
-        if (connection.uuid === connectionUuid) {
+        if (connection.participantUuid === participantUuid) {
           connections.splice(index, 1)
         }
       })
     })
 
     ws.on('message', (msg) => {
-      const connection = getConnection(connectionUuid)
+      const connection = getConnection(participantUuid)
       if (connection == null) {
         sendError(ws, 'Error: Cannot find the connection')
         return
