@@ -45,7 +45,7 @@ const main = async (): Promise<void> => {
   console.log(`Listening on ${address}:${port}`)
 }
 
-main().catch((error) => {
-  console.error(`Error: ${error.message as string}`)
+main().catch((e) => {
+  console.error(`Error: ${e.message as string}`)
   process.exit(1)
 })
