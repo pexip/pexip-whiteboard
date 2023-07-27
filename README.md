@@ -24,7 +24,7 @@ And this is the structure of the messages:
 
 The `MessageType` can be one of the following:
 
-- `create`: It's used to indicate that this user wants to create a whiteboad and share the link with the rest of the user of the conference. The body in this case is empty.
+- `create`: It's used to indicate that this user wants to create a whiteboard and share the link with the rest of the user of the conference. The body in this case is empty.
 - `created`: Indicates that the user created a whiteboard. The body contains a string with the link to the whiteboard.
 - `invited`: Indicates that the user received a invitation for a whiteboard from another user. The body contains a string with the link to the whiteboard.
 - `error`: This is used to indicate that something went wrong with the whiteboard creation. The message body will contain a string with the error description. 
@@ -48,12 +48,15 @@ The file `default.json` defines the configuration for this back-end service. We 
 | infinity.url | URL of the Infinity Management Node. |
 | infinity.username | Username for the Infinity Manager Node. |
 | infinity.password | Password for the Infinity Manager Node. |
-| whiteboard.provider | Whiteboard provider to use. At this point two are availabe: `collaboard` and `conceptboard`. |
-| whiteboard.url | URL to the whiteboard API.|
-| whiteboard.username | Username to authenticate in the whiteboard API.|
-| whiteboard.password | Password to the whiteboard API. |
-| whiteboard.appUrl | **Only for Collaboard.** URL for the Collaboard Web App. |
-| whiteboard.appVersion | **Only for Collaboard.** Version of the Collaboard Web App.|
+| whiteboard.defaultProvider | Indicates the whiteboard provider to use in case the plugin doesn't specify one. |
+| whiteboard.providers | An array with all the available whiteboard providers. |
+| whiteboard.providers[].id | The id of the whiteboard provider to use. We have two options: `collaboard` or `conceptboard`. |
+| whiteboard.providers[].url | URL to the whiteboard API.|
+| whiteboard.providers[].username | **Only for Collaboard.** Username to authenticate in the whiteboard API.|
+| whiteboard.providers[].password | **Only for Collaboard.** Password to the whiteboard API. |
+| whiteboard.providers[].appUrl | **Only for Collaboard.** URL for the Collaboard Web App. |
+| whiteboard.providers[].appVersion | **Only for Collaboard.** Version of the Collaboard Web App.|
+| validateInfinityConference | No validate the conference and participantUuid into Infinity. | 
 | verifyCertificates | Ignore the certificates from other servers (Infinity and whiteboard provider). This should always be `true` in production. |
 
 ### How to use
@@ -78,12 +81,20 @@ npm start
 
 This will launch the developer server in http://localhost:3000.
 
-If we want to create a production package that can be uploaded to infinity, we can
+To print additional messages in the console, we can launch the server in `DEBUG` mode. To do this we should run the following code:
+
+```
+DEBUG=whiteboard-server:* npm start
+```
+
+If we want to create a production package, we can
 run the following command:
 
 ```
 npm run build
 ```
+
+There is also a `docker-compose` and  `Dockerfile` to launch the server in a container.
 
 ## Plugin
 
@@ -91,7 +102,8 @@ The plugin has a configuration file that defines the location of the `server`:
 
 ```json
 {
-  "server": <URL to the server>
+  "server": <URL to the server>,
+  "whiteboardProvider": <collaboard | conceptboard>
 }
 ```
 
