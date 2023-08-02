@@ -8,15 +8,11 @@ const uniqueDeviceId = uuidv4()
 const providers: ConfigProvider[] = config.get('whiteboard.providers')
 const provider = providers.find((provider) => provider.id === Provider.Collaboard)
 
-if (provider == null) {
-  throw new Error('Cannot find provider config for Collaboard.')
-}
-
-const url: string = provider.url
-const username: string = provider.username ?? ''
-const password: string = provider.password ?? ''
-const appUrl: string = provider.appUrl ?? ''
-const appVersion: string = provider.appVersion ?? ''
+const url: string = provider?.url ?? ''
+const username: string = provider?.username ?? ''
+const password: string = provider?.password ?? ''
+const appUrl: string = provider?.appUrl ?? ''
+const appVersion: string = provider?.appVersion ?? ''
 
 interface ProjectData {
   CanvasSizeRatio: number

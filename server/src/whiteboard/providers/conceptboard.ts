@@ -5,11 +5,7 @@ import { Provider } from './provider'
 const providers: ConfigProvider[] = config.get('whiteboard.providers')
 const provider = providers.find((provider) => provider.id === Provider.Conceptboard)
 
-if (provider == null) {
-  throw new Error('Cannot find provider config for Conceptboard.')
-}
-
-const url = provider.url
+const url = provider?.url ?? ''
 
 const checkConceptboardConnection = async (): Promise<void> => {}
 

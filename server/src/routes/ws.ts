@@ -1,7 +1,7 @@
 import express from 'express'
 import type WebSocket from 'ws'
 import { checkIfParticipantIsAllowed } from '../infinity'
-import { createWhiteboardLink } from '../whiteboard/whiteboard'
+import { createWhiteboardLink, deleteWhiteboardLink } from '../whiteboard/whiteboard'
 import config from 'config'
 import type { Provider } from '../whiteboard/providers/provider'
 import Debug from 'debug'
@@ -80,11 +80,18 @@ export const WsRouter = (): any => {
       participantUuid: req.params.participantUuid
     })
 
+    // TODO
+
     ws.on('close', () => {
       debug(`Participant disconnected: ${participantUuid}`)
       connections.forEach((connection, index) => {
         if (connection.participantUuid === participantUuid) {
+          const conference = connection.conference
           connections.splice(index, 1)
+          const conferenceFound = connections.some((connection) => connection.conference === conference)
+          if (!conferenceFound) {
+            deleteWhiteboardLink(conference)
+          }
         }
       })
     })

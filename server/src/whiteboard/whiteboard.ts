@@ -7,25 +7,41 @@ import {
   checkConceptboardConnection,
   createConceptboardLink
 } from './providers/conceptboard'
-import Debug from 'debug'
 
-const debug = Debug('whiteboard-server:whiteboard')
+import log from 'log'
+
+const logger = log.get('whiteboard')
+
+interface WhiteboardInfo {
+  conference: string
+  whiteboardLink: string
+  provider: Provider
+}
+
+let whiteboardList: WhiteboardInfo[] = []
 
 const checkWhiteboardConnection = async (provider: Provider): Promise<void> => {
   switch (provider) {
     case Provider.Collaboard: {
-      debug('Checking Collaboard connection...')
+      logger.info('Checking Collaboard connection...')
       await checkCollaboardConnection()
-      debug('Collaboard connection OK!')
+      logger.info('Collaboard connection OK!')
       break
     }
     case Provider.Conceptboard: {
-      debug('Checking Conceptboard connection...')
+      logger.info('Checking Conceptboard connection...')
       await checkConceptboardConnection()
-      debug('Conceptboard connection OK!')
+      logger.info('Conceptboard connection OK!')
       break
     }
+    default:
+      throw new Error('Unknown whiteboard provider')
   }
+}
+
+const getWhiteboardLink = (conference: string): string | null => {
+  const whiteboardInfo = whiteboardList.find((whiteboardInfo) => whiteboardInfo.conference === conference)
+  return whiteboardInfo != null ? whiteboardInfo.whiteboardLink : null
 }
 
 const createWhiteboardLink = async (provider: Provider, conference: string): Promise<string> => {
@@ -40,10 +56,27 @@ const createWhiteboardLink = async (provider: Provider, conference: string): Pro
       break
     }
   }
+  whiteboardList.push({
+    conference,
+    whiteboardLink: link,
+    provider
+  })
   return link
 }
 
+const deleteWhiteboardLink = async (conference: string): Promise<void> => {
+  const index = whiteboardList.findIndex((whiteboard) => whiteboard.conference === conference)
+  whiteboardList.splice(index, 1)
+}
+
+const setWhiteboardList = (list: WhiteboardInfo[]): void => {
+  whiteboardList = list
+}
+
 export {
+  setWhiteboardList,
   checkWhiteboardConnection,
-  createWhiteboardLink
+  getWhiteboardLink,
+  createWhiteboardLink,
+  deleteWhiteboardLink
 }
