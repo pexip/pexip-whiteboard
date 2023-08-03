@@ -1,6 +1,5 @@
 import express from 'express'
 import path from 'path'
-import loggerMorgan from 'morgan'
 import config from 'config'
 import ExpressWs from 'express-ws'
 
@@ -34,9 +33,9 @@ const main = async (): Promise<void> => {
   // TODO: Purge all old whiteboards
 
   const app = express()
+
   ExpressWs(app)
 
-  app.use(loggerMorgan('dev'))
   app.use(express.json())
   app.use(express.urlencoded({ extended: false }))
   app.use(express.static(path.join(__dirname, 'public')))

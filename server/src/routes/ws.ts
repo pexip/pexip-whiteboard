@@ -4,9 +4,10 @@ import { checkIfParticipantIsAllowed } from '../infinity'
 import { createWhiteboardLink, deleteWhiteboardLink } from '../whiteboard/whiteboard'
 import config from 'config'
 import type { Provider } from '../whiteboard/providers/provider'
-import Debug from 'debug'
+import { getLogger, logWsMessage } from '../logger'
+import path from 'path'
 
-const debug = Debug('whiteboard-server:ws')
+const logger = getLogger(path.basename(__filename))
 
 const router = express.Router()
 
@@ -41,9 +42,9 @@ const handleCreate = async (connection: Connection, provider: Provider): Promise
   if (provider == null) {
     provider = config.get('whiteboard.defaultProvider') ?? config.get('whiteboard.providers[0].id')
   }
-  debug(`Creating Whiteboard by user: ${connection.participantUuid}...`)
+  logger.info(`Creating Whiteboard by user: ${connection.participantUuid}...`)
   const link = await createWhiteboardLink(provider, connection.conference)
-  debug('Whiteboard created!')
+  logger.info('Whiteboard created!')
   const participants: string[] = []
   connections.forEach((conn) => {
     if (conn.conference === connection.conference) {
@@ -52,27 +53,42 @@ const handleCreate = async (connection: Connection, provider: Provider): Promise
         type: isCreator ? MessageType.Created : MessageType.Invited,
         body: link
       }
+      logWsMessage({
+        logger,
+        conference: connection.conference,
+        participantUuid: connection.participantUuid,
+        message: 'Message sent',
+        body: message
+      })
       conn.ws.send(JSON.stringify(message))
       if (!isCreator) participants.push(conn.participantUuid)
     }
   })
-  if (participants.length > 0) {
-    debug(`Whiteboard shared with following participants: ${participants.join(', ')}.`)
-  }
 }
 
-const sendError = (ws: WebSocket, error: string): void => {
+const sendError = (connection: Connection, error: string): void => {
   const response: WebSocketMessage = {
     type: MessageType.Error,
     body: error
   }
-  debug(error)
-  ws.send(JSON.stringify(response))
+  logWsMessage({
+    logger,
+    level: 'error',
+    conference: connection.conference,
+    participantUuid: connection.participantUuid,
+    message: error
+  })
+  connection.ws.send(JSON.stringify(response))
 }
 
 export const WsRouter = (): any => {
   router.ws('/:conference/:participantUuid', (ws, req, next) => {
-    debug(`Participant connected: ${req.params.participantUuid}`)
+    logWsMessage({
+      logger,
+      conference: req.params.conference,
+      participantUuid: req.params.participantUuid,
+      message: 'Connected'
+    })
     const participantUuid = req.params.participantUuid
     connections.push({
       ws,
@@ -80,17 +96,20 @@ export const WsRouter = (): any => {
       participantUuid: req.params.participantUuid
     })
 
-    // TODO
-
     ws.on('close', () => {
-      debug(`Participant disconnected: ${participantUuid}`)
       connections.forEach((connection, index) => {
         if (connection.participantUuid === participantUuid) {
+          logWsMessage({
+            logger,
+            conference: connection.conference,
+            participantUuid: connection.participantUuid,
+            message: 'Disconnected'
+          })
           const conference = connection.conference
           connections.splice(index, 1)
           const conferenceFound = connections.some((connection) => connection.conference === conference)
           if (!conferenceFound) {
-            deleteWhiteboardLink(conference)
+            deleteWhiteboardLink(conference).catch((e) => logger.error(e))
           }
         }
       })
@@ -99,7 +118,11 @@ export const WsRouter = (): any => {
     ws.on('message', (msg) => {
       const connection = getConnection(participantUuid)
       if (connection == null) {
-        sendError(ws, 'Error: Cannot find the connection')
+        sendError({
+          ws,
+          conference: 'not-found',
+          participantUuid: 'not-found'
+        }, 'Error: Cannot find the connection')
         return
       }
 
@@ -107,20 +130,27 @@ export const WsRouter = (): any => {
       try {
         // eslint-disable-next-line @typescript-eslint/no-base-to-string
         msgParsed = JSON.parse(msg.toString())
+        logWsMessage({
+          logger,
+          conference: connection.conference,
+          participantUuid: connection.participantUuid,
+          message: 'Message received',
+          body: msgParsed
+        })
       } catch (error) {
-        sendError(ws, 'Error: Cannot parse message')
+        sendError(connection, 'Cannot parse message')
         return
       }
       switch (msgParsed.type) {
         case MessageType.Create: {
           handleCreate(connection, msgParsed.body)
             .catch((error) => {
-              sendError(ws, error.toString())
+              sendError(connection, error.toString())
             })
           break
         }
         default: {
-          sendError(ws, 'Error: Unsupported message type')
+          sendError(connection, 'Unsupported message type')
         }
       }
     })
