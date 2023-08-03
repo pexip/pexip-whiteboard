@@ -7,10 +7,10 @@ import {
   checkConceptboardConnection,
   createConceptboardLink
 } from './providers/conceptboard'
+import { getLogger } from '../logger'
+import path from 'path'
 
-import log from 'log'
-
-const logger = log.get('whiteboard')
+const logger = getLogger(path.basename(__filename))
 
 interface WhiteboardInfo {
   conference: string

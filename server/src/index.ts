@@ -1,6 +1,6 @@
 import express from 'express'
 import path from 'path'
-import logger from 'morgan'
+import loggerMorgan from 'morgan'
 import config from 'config'
 import ExpressWs from 'express-ws'
 
@@ -10,25 +10,14 @@ import wsRouter from './routes/ws'
 import { checkInfinityConnection } from './infinity'
 import { checkWhiteboardConnection } from './whiteboard/whiteboard'
 import type { Provider } from './whiteboard/providers/provider'
+import { getLogger } from './logger'
 
-// @ts-expect-error The following library doesn't have typings
-import logNode from 'log-node'
-
-import log from 'log'
-
-// Initialize logging
-logNode({
-  env: {
-    LOG_LEVEL: config.has('server.logLevel') ? config.get('server.logLevel') : 'notice'
-  }
-})
-
-const logIndex = log.get('index')
+const logger = getLogger(path.basename(__filename))
 
 const main = async (): Promise<void> => {
   checkConfig()
   if (config.has('verifyCertificates') && config.get('verifyCertificates') === false) {
-    logIndex.info('Disabled TLS verification')
+    logger.info('Disabled TLS verification')
     process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0'
   }
   if (!config.has('validateInfinityConference') || config.get('validateInfinityConference')) {
@@ -47,7 +36,7 @@ const main = async (): Promise<void> => {
   const app = express()
   ExpressWs(app)
 
-  app.use(logger('dev'))
+  app.use(loggerMorgan('dev'))
   app.use(express.json())
   app.use(express.urlencoded({ extended: false }))
   app.use(express.static(path.join(__dirname, 'public')))
@@ -56,10 +45,10 @@ const main = async (): Promise<void> => {
 
   app.listen(parseInt(port), address)
 
-  logIndex.notice(`Listening on ${address}:${port}`)
+  logger.info(`Listening on ${address}:${port}`)
 }
 
 main().catch((e) => {
-  logIndex.error(`Error: ${e.message as string}`)
+  logger.error(`Error: ${e.message as string}`)
   process.exit(1)
 })
