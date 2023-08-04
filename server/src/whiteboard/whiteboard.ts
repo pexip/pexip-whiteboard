@@ -1,11 +1,13 @@
 import { Provider } from './providers/provider'
 import {
   checkCollaboardConnection,
-  createCollaboardLink
+  createCollaboardLink,
+  deleteCollaboardLink
 } from './providers/collaboard'
 import {
   checkConceptboardConnection,
-  createConceptboardLink
+  createConceptboardLink,
+  deleteConceptboardLink
 } from './providers/conceptboard'
 import { getLogger } from '../logger'
 import path from 'path'
@@ -55,6 +57,9 @@ const createWhiteboardLink = async (provider: Provider, conference: string): Pro
       link = await createConceptboardLink(conference)
       break
     }
+    default: {
+      throw new Error('Unknown whiteboard provider')
+    }
   }
   whiteboardList.push({
     conference,
@@ -66,7 +71,23 @@ const createWhiteboardLink = async (provider: Provider, conference: string): Pro
 
 const deleteWhiteboardLink = async (conference: string): Promise<void> => {
   const index = whiteboardList.findIndex((whiteboard) => whiteboard.conference === conference)
+  const whiteboardInfo = whiteboardList[index]
+
   whiteboardList.splice(index, 1)
+
+  switch (whiteboardInfo.provider) {
+    case Provider.Collaboard: {
+      await deleteCollaboardLink(conference)
+      break
+    }
+    case Provider.Conceptboard: {
+      await deleteConceptboardLink(conference)
+      break
+    }
+    default: {
+      throw new Error('Unknown whiteboard provider')
+    }
+  }
 }
 
 const setWhiteboardList = (list: WhiteboardInfo[]): void => {
@@ -74,9 +95,9 @@ const setWhiteboardList = (list: WhiteboardInfo[]): void => {
 }
 
 export {
-  setWhiteboardList,
   checkWhiteboardConnection,
   getWhiteboardLink,
   createWhiteboardLink,
-  deleteWhiteboardLink
+  deleteWhiteboardLink,
+  setWhiteboardList
 }

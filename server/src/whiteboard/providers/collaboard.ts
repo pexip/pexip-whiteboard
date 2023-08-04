@@ -2,6 +2,10 @@ import config from 'config'
 import { v4 as uuidv4 } from 'uuid'
 import type { ConfigProvider } from '../../config'
 import { Provider } from './provider'
+import { getLogger } from '../../logger'
+import path from 'path'
+
+const logger = getLogger(path.basename(__filename))
 
 const uniqueDeviceId = uuidv4()
 
@@ -59,10 +63,17 @@ const createCollaboardLink = async (conference: string): Promise<string> => {
   }
   if (project != null) {
     await deleteProject(authToken, project.Project.ProjectId)
+    logger.debug('Deleted Collaboard project')
   }
   const projectId = await createProject(authToken, conference)
+  logger.debug('Created Collaboard project')
   const link = await createInvitationLink(authToken, projectId)
+  logger.debug('Created Invitation for Collaboard project')
   return link
+}
+
+const deleteCollaboardLink = async (conference: string): Promise<void> => {
+  // TODO: To implement
 }
 
 /**
@@ -204,5 +215,6 @@ const createInvitationLink = async (authToken: string, projectId: number): Promi
 
 export {
   checkCollaboardConnection,
-  createCollaboardLink
+  createCollaboardLink,
+  deleteCollaboardLink
 }

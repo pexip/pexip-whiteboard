@@ -109,7 +109,7 @@ export const WsRouter = (): any => {
           connections.splice(index, 1)
           const conferenceFound = connections.some((connection) => connection.conference === conference)
           if (!conferenceFound) {
-            deleteWhiteboardLink(conference).catch((e) => logger.error(e))
+            deleteWhiteboardLink(conference).catch((e) => { logger.error(e) })
           }
         }
       })
