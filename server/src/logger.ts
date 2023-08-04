@@ -1,11 +1,11 @@
 import config from 'config'
 import pino, { type Level, type Logger } from 'pino'
+import type { Connection } from './types/Connection'
 
 interface LoggingRequest {
   logger: Logger
   level?: Level
-  conference: string
-  participantUuid: string
+  connection: Connection
   message: string
   body?: object
 }
@@ -23,8 +23,8 @@ const getLogger = (name: string): Logger => {
 
 const logWsMessage = (req: LoggingRequest): void => {
   let msg = {
-    conference: req.conference,
-    participantUuid: req.participantUuid,
+    conference: req.connection.conference,
+    participantUuid: req.connection.participantUuid,
     message: req.message
   }
   if (req.body != null) {

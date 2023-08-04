@@ -1,4 +1,5 @@
-import { Provider } from './providers/provider'
+import path from 'path'
+import { Provider } from '../types/Provider'
 import {
   checkCollaboardConnection,
   createCollaboardLink,
@@ -10,7 +11,8 @@ import {
   deleteConceptboardLink
 } from './providers/conceptboard'
 import { getLogger } from '../logger'
-import path from 'path'
+
+import type { Connection } from '../types/Connection'
 
 const logger = getLogger(path.basename(__filename))
 
@@ -46,7 +48,8 @@ const getWhiteboardLink = (conference: string): string | null => {
   return whiteboardInfo != null ? whiteboardInfo.whiteboardLink : null
 }
 
-const createWhiteboardLink = async (provider: Provider, conference: string): Promise<string> => {
+const createWhiteboardLink = async (conn: Connection, provider: Provider): Promise<string> => {
+  const conference = conn.conference
   let link = ''
   switch (provider) {
     case Provider.Collaboard: {

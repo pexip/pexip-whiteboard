@@ -1,162 +1,158 @@
-import express from 'express'
-import type WebSocket from 'ws'
+import config from 'config'
+import path from 'path'
+import express, { type NextFunction, type Request } from 'express'
+
 import { checkIfParticipantIsAllowed } from '../infinity'
 import { createWhiteboardLink, deleteWhiteboardLink } from '../whiteboard/whiteboard'
-import config from 'config'
-import type { Provider } from '../whiteboard/providers/provider'
 import { getLogger, logWsMessage } from '../logger'
-import path from 'path'
+import { WebsocketMessageType } from '../types/WebsocketMessageType'
+
+import type WebSocket from 'ws'
+import type { Provider } from '../types/Provider'
+import type { Connection } from '../types/Connection'
+import type { WebSocketMessage } from '../types/WebsocketMessage'
 
 const logger = getLogger(path.basename(__filename))
 
 const router = express.Router()
 
-enum MessageType {
-  Create = 'create',
-  Created = 'created',
-  Invited = 'invited',
-  Error = 'error'
-}
-
-interface WebSocketMessage {
-  type: MessageType
-  body: any
-}
-
-interface Connection {
-  ws: WebSocket
-  conference: string
-  participantUuid: string
-}
-
 const connections: Connection[] = []
 
-const getConnection = (participantUuid: string): Connection | undefined => {
-  return connections.find((connection) => connection.participantUuid === participantUuid)
-}
-
-const handleCreate = async (connection: Connection, provider: Provider): Promise<void> => {
-  if (!config.has('validateInfinityConference') || config.get('validateInfinityConference')) {
-    await checkIfParticipantIsAllowed(connection.conference, connection.participantUuid)
-  }
-  if (provider == null) {
-    provider = config.get('whiteboard.defaultProvider') ?? config.get('whiteboard.providers[0].id')
-  }
-  logger.info(`Creating Whiteboard by user: ${connection.participantUuid}...`)
-  const link = await createWhiteboardLink(provider, connection.conference)
-  logger.info('Whiteboard created!')
-  const participants: string[] = []
-  connections.forEach((conn) => {
-    if (conn.conference === connection.conference) {
-      const isCreator = conn.participantUuid === connection.participantUuid
-      const message: WebSocketMessage = {
-        type: isCreator ? MessageType.Created : MessageType.Invited,
-        body: link
-      }
-      logWsMessage({
-        logger,
-        conference: connection.conference,
-        participantUuid: connection.participantUuid,
-        message: 'Message sent',
-        body: message
-      })
-      conn.ws.send(JSON.stringify(message))
-      if (!isCreator) participants.push(conn.participantUuid)
-    }
-  })
-}
-
-const sendError = (connection: Connection, error: string): void => {
-  const response: WebSocketMessage = {
-    type: MessageType.Error,
-    body: error
-  }
-  logWsMessage({
-    logger,
-    level: 'error',
-    conference: connection.conference,
-    participantUuid: connection.participantUuid,
-    message: error
-  })
-  connection.ws.send(JSON.stringify(response))
-}
-
-export const WsRouter = (): any => {
+const wsRouter = (): any => {
   router.ws('/:conference/:participantUuid', (ws, req, next) => {
-    logWsMessage({
-      logger,
-      conference: req.params.conference,
-      participantUuid: req.params.participantUuid,
-      message: 'Connected'
-    })
-    const participantUuid = req.params.participantUuid
-    connections.push({
-      ws,
-      conference: req.params.conference,
-      participantUuid: req.params.participantUuid
-    })
-
-    ws.on('close', () => {
-      connections.forEach((connection, index) => {
-        if (connection.participantUuid === participantUuid) {
-          logWsMessage({
-            logger,
-            conference: connection.conference,
-            participantUuid: connection.participantUuid,
-            message: 'Disconnected'
-          })
-          const conference = connection.conference
-          connections.splice(index, 1)
-          const conferenceFound = connections.some((connection) => connection.conference === conference)
-          if (!conferenceFound) {
-            deleteWhiteboardLink(conference).catch((e) => { logger.error(e) })
-          }
-        }
-      })
-    })
-
-    ws.on('message', (msg) => {
-      const connection = getConnection(participantUuid)
-      if (connection == null) {
-        sendError({
-          ws,
-          conference: 'not-found',
-          participantUuid: 'not-found'
-        }, 'Error: Cannot find the connection')
-        return
-      }
-
-      let msgParsed
-      try {
-        // eslint-disable-next-line @typescript-eslint/no-base-to-string
-        msgParsed = JSON.parse(msg.toString())
-        logWsMessage({
-          logger,
-          conference: connection.conference,
-          participantUuid: connection.participantUuid,
-          message: 'Message received',
-          body: msgParsed
-        })
-      } catch (error) {
-        sendError(connection, 'Cannot parse message')
-        return
-      }
-      switch (msgParsed.type) {
-        case MessageType.Create: {
-          handleCreate(connection, msgParsed.body)
-            .catch((error) => {
-              sendError(connection, error.toString())
-            })
-          break
-        }
-        default: {
-          sendError(connection, 'Unsupported message type')
-        }
-      }
-    })
-    next()
+    handleNewConnection(ws, req, next)
   })
   return router
 }
 
-export default WsRouter
+const handleNewConnection = (ws: WebSocket, req: Request, next: NextFunction): void => {
+  const participantUuid = req.params.participantUuid
+  connections.push({
+    ws,
+    conference: req.params.conference,
+    participantUuid: req.params.participantUuid
+  })
+  ws.on('close', () => {
+    const conn = getConnection(participantUuid)
+    if (conn != null) {
+      handleCloseConnection(conn)
+    }
+  })
+
+  ws.on('message', (msg) => {
+    const conn = getConnection(participantUuid)
+    if (conn != null) {
+      // eslint-disable-next-line @typescript-eslint/no-base-to-string
+      void handleReceiveMessage(conn, msg.toString())
+    }
+  })
+}
+
+const getConnection = (participantUuid: string): Connection | null => {
+  return connections.find((conn) => conn.participantUuid === participantUuid) ?? null
+}
+
+const handleCloseConnection = (conn: Connection): void => {
+  const message = 'Disconnected'
+  logWs(conn, message)
+  deleteWhiteboardLink(conn.conference).catch((e) => { logWsError(conn, e) })
+  removeConnection(conn)
+}
+
+const handleReceiveMessage = async (conn: Connection, msg: string): Promise<void> => {
+  const msgParsed = JSON.parse(msg)
+  let error = ''
+  switch (msgParsed.type) {
+    case WebsocketMessageType.Create: {
+      try {
+        const provider = msgParsed.body
+        const link = await handleCreateWhiteboard(conn, provider)
+        notifyWhiteboardCreated(conn, link)
+      } catch (e: any) {
+        error = e.message
+      }
+      break
+    }
+    default: {
+      error = 'Unsupported message type'
+    }
+  }
+  if (error !== '') {
+    logWsError(conn, error)
+    sendWsError(conn, error)
+  }
+}
+
+const handleCreateWhiteboard = async (conn: Connection, provider: Provider): Promise<string> => {
+  if (!config.has('validateInfinityConference') || config.get('validateInfinityConference')) {
+    await checkIfParticipantIsAllowed(conn.conference, conn.participantUuid)
+  }
+  if (provider == null) {
+    provider = getDefaultProvider()
+  }
+  const link = await createWhiteboardLink(conn, provider)
+  return link
+}
+
+const notifyWhiteboardCreated = (conn: Connection, link: string): void => {
+  connections.forEach((c: Connection) => {
+    if (c.conference === conn.conference) {
+      const isCreator = c.participantUuid === conn.participantUuid
+      const type = isCreator ? WebsocketMessageType.Created : WebsocketMessageType.Invited
+      const body = link
+      const msg = sendWs(c, type, body)
+      const logMessage = 'Message Sent'
+      logWs(c, logMessage, msg)
+    }
+  })
+}
+
+const logWs = (conn: Connection, msg: string, body?: object): void => {
+  logWsMessage({
+    logger,
+    connection: conn,
+    message: msg,
+    body
+  })
+}
+
+const logWsError = (conn: Connection, msg: string): void => {
+  logWsMessage({
+    logger,
+    level: 'error',
+    connection: conn,
+    message: msg
+  })
+}
+
+const sendWs = (conn: Connection, type: WebsocketMessageType, body: any): object => {
+  const msg: WebSocketMessage = {
+    type,
+    body
+  }
+  conn.ws.send(JSON.stringify(msg))
+  return msg
+}
+
+const sendWsError = (conn: Connection, error: string): object => {
+  const msg: WebSocketMessage = {
+    type: WebsocketMessageType.Error,
+    body: error
+  }
+  conn.ws.send(JSON.stringify(msg))
+  return msg
+}
+
+const getDefaultProvider = (): Provider => {
+  return config.get('whiteboard.defaultProvider') ?? config.get('whiteboard.providers[0].id')
+}
+
+const removeConnection = (conn: Connection): void => {
+  connections.forEach((c, index) => {
+    if (c.participantUuid === conn.participantUuid) {
+      connections.splice(index, 1)
+    }
+  })
+}
+
+export { wsRouter }

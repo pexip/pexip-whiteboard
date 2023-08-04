@@ -1,5 +1,5 @@
 import config from 'config'
-import { Provider } from './whiteboard/providers/provider'
+import { Provider } from './types/Provider'
 
 interface ConfigProvider {
   id: string

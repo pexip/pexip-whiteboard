@@ -5,10 +5,10 @@ import ExpressWs from 'express-ws'
 
 import { checkConfig } from './config'
 import type { ConfigProvider } from './config'
-import wsRouter from './routes/ws'
+import { wsRouter } from './routes/ws'
 import { checkInfinityConnection } from './infinity'
 import { checkWhiteboardConnection } from './whiteboard/whiteboard'
-import type { Provider } from './whiteboard/providers/provider'
+import type { Provider } from './types/Provider'
 import { getLogger } from './logger'
 
 const logger = getLogger(path.basename(__filename))

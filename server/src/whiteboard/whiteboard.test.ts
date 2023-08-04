@@ -1,5 +1,8 @@
-import { Provider } from './providers/provider'
+import { Provider } from '../types/Provider'
 import { checkWhiteboardConnection, createWhiteboardLink, deleteWhiteboardLink, getWhiteboardLink, setWhiteboardList } from './whiteboard'
+
+import type WebSocket from 'ws'
+import type { Connection } from '../types/Connection'
 
 const mockCheckCollaboardConnection = jest.fn()
 const mockCheckConceptboardConnection = jest.fn()
@@ -75,29 +78,31 @@ describe('createWhiteboardLink', () => {
     mockCreateConceptboardLink.mockClear()
     setWhiteboardList([])
   })
+  const conn: Connection = {
+    ws: null as unknown as WebSocket,
+    conference: 'my-conference',
+    participantUuid: 'my-participant-uuid'
+  }
   it('should save the new whiteboard in the array', async () => {
-    const conference = 'my-conference'
-    await createWhiteboardLink(Provider.Conceptboard, conference)
-    const link = getWhiteboardLink(conference)
-    expect(link).toBe(conference)
+    console.log(conn)
+    await createWhiteboardLink(conn, Provider.Conceptboard)
+    const link = getWhiteboardLink(conn.conference)
+    expect(link).toBe(conn.conference)
   })
   it('should call createCollaboardLink if provider is collaboard', async () => {
-    const conference = 'my-conference'
-    await createWhiteboardLink(Provider.Collaboard, conference)
+    await createWhiteboardLink(conn, Provider.Collaboard)
     expect(mockCreateCollaboardLink).toBeCalledTimes(1)
     expect(mockCreateConceptboardLink).not.toBeCalled()
   })
   it('should call createConceptboarddLink if provider is conceptboard', async () => {
-    const conference = 'my-conference'
-    await createWhiteboardLink(Provider.Conceptboard, conference)
+    await createWhiteboardLink(conn, Provider.Conceptboard)
     expect(mockCreateCollaboardLink).not.toBeCalled()
     expect(mockCreateConceptboardLink).toBeCalledTimes(1)
   })
   it('should trigger an error if the provider is not supported', async () => {
-    const conference = 'my-conference'
     expect.assertions(1)
     try {
-      await createWhiteboardLink('unknown-provider' as Provider, conference)
+      await createWhiteboardLink(conn, 'unknown-provider' as Provider)
     } catch (e: any) {
       expect(e.message).toMatch('Unknown whiteboard provider')
     }
