@@ -5,7 +5,7 @@ import ExpressWs from 'express-ws'
 
 import { checkConfig } from './config'
 import type { ConfigProvider } from './config'
-import { wsRouter } from './routes/ws'
+import { wsRouter } from './routes/ws/ws'
 import { checkInfinityConnection } from './infinity'
 import { checkWhiteboardConnection } from './whiteboard/whiteboard'
 import type { Provider } from './types/Provider'

@@ -21,7 +21,7 @@ const getLogger = (name: string): Logger => {
   return logger
 }
 
-const logWsMessage = (req: LoggingRequest): void => {
+const logWs = (req: LoggingRequest): void => {
   let msg = {
     conference: req.connection.conference,
     participantUuid: req.connection.participantUuid,
@@ -64,5 +64,5 @@ const logWsMessage = (req: LoggingRequest): void => {
 
 export {
   getLogger,
-  logWsMessage
+  logWs
 }

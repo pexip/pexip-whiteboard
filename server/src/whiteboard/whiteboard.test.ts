@@ -84,7 +84,6 @@ describe('createWhiteboardLink', () => {
     participantUuid: 'my-participant-uuid'
   }
   it('should save the new whiteboard in the array', async () => {
-    console.log(conn)
     await createWhiteboardLink(conn, Provider.Conceptboard)
     const link = getWhiteboardLink(conn.conference)
     expect(link).toBe(conn.conference)
