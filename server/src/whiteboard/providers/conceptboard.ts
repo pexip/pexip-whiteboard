@@ -1,6 +1,6 @@
 import config from 'config'
 import type { ConfigProvider } from '../../config'
-import { Provider } from '../../types/Provider'
+import { Provider } from './Provider'
 import { getLogger } from '../../logger'
 import path from 'path'
 

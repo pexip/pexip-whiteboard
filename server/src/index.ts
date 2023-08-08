@@ -8,7 +8,7 @@ import type { ConfigProvider } from './config'
 import { wsRouter } from './routes/ws/ws'
 import { checkInfinityConnection } from './infinity'
 import { checkWhiteboardConnection } from './whiteboard/whiteboard'
-import type { Provider } from './types/Provider'
+import type { Provider } from './whiteboard/providers/Provider'
 import { getLogger } from './logger'
 
 const logger = getLogger(path.basename(__filename))

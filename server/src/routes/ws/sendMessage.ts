@@ -1,4 +1,4 @@
-import type { Connection } from '../../types/Connection'
+import type { Connection } from '../../connections/Connection'
 import type { WebSocketMessage } from '../../types/WebsocketMessage'
 import type { WebsocketMessageType } from '../../types/WebsocketMessageType'
 

@@ -1,9 +1,9 @@
 import path from 'path'
 import { getLogger, logWs } from '../../logger'
 import { deleteWhiteboardLink } from '../../whiteboard/whiteboard'
-import { removeConnection } from './connections'
+import { removeConnection } from '../../connections/connections'
 
-import type { Connection } from '../../types/Connection'
+import type { Connection } from '../../connections/Connection'
 
 const logger = getLogger(path.basename(__filename))
 

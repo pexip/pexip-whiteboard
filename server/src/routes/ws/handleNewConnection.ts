@@ -1,12 +1,15 @@
 import path from 'path'
 import { getLogger, logWs } from '../../logger'
-import { addConnection, getConnectionByParticipant } from './connections'
+import { addConnection, getConnectionByParticipant } from '../../connections/connections'
 import { handleCloseConnection } from './handleCloseConnection'
 import { handleReceiveMessage } from './handleReceiveMessage'
 
-import type { Connection } from '../../types/Connection'
+import type { Connection } from '../../connections/Connection'
 import type { WebSocket } from 'ws'
 import type { Request } from 'express'
+import { getWhiteboardLink } from '../../whiteboard/whiteboard'
+import { sendMessage } from './sendMessage'
+import { WebsocketMessageType } from '../../types/WebsocketMessageType'
 
 const logger = getLogger(path.basename(__filename))
 
@@ -23,6 +26,16 @@ export const handleNewConnection = (ws: WebSocket, req: Request): void => {
     connection: newConnection,
     message: 'Connected'
   })
+  const link = getWhiteboardLink(req.params.conference)
+  if (link != null) {
+    const msg = sendMessage(newConnection, WebsocketMessageType.Invited, link)
+    logWs({
+      logger,
+      connection: newConnection,
+      message: 'Message Sent',
+      body: msg
+    })
+  }
   ws.on('close', () => {
     const conn = getConnectionByParticipant(participantUuid)
     if (conn != null) {

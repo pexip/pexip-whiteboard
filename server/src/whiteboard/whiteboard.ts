@@ -1,5 +1,5 @@
 import path from 'path'
-import { Provider } from '../types/Provider'
+import { Provider } from './providers/Provider'
 import {
   checkCollaboardConnection,
   createCollaboardLink,
@@ -12,7 +12,7 @@ import {
 } from './providers/conceptboard'
 import { getLogger } from '../logger'
 
-import type { Connection } from '../types/Connection'
+import type { Connection } from '../connections/Connection'
 
 const logger = getLogger(path.basename(__filename))
 

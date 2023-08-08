@@ -1,6 +1,6 @@
 import config from 'config'
 import pino, { type Level, type Logger } from 'pino'
-import type { Connection } from './types/Connection'
+import type { Connection } from './connections/Connection'
 
 interface LoggingRequest {
   logger: Logger

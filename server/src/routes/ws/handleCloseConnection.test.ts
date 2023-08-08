@@ -1,7 +1,7 @@
 import { handleCloseConnection } from './handleCloseConnection'
 
 import type { WebSocket } from 'ws'
-import type { Connection } from '../../types/Connection'
+import type { Connection } from '../../connections/Connection'
 
 const mockDeleteWhiteboardLink = jest.fn(async (conference: string) => await Promise.resolve(null))
 jest.mock('../../whiteboard/whiteboard', () => ({
@@ -9,7 +9,7 @@ jest.mock('../../whiteboard/whiteboard', () => ({
 }))
 
 const mockRemoveConnection = jest.fn()
-jest.mock('./connections', () => ({
+jest.mock('../../connections/connections', () => ({
   removeConnection: (conn: Connection) => mockRemoveConnection(conn)
 }))
 

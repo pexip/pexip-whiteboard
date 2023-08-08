@@ -1,8 +1,8 @@
-import { Provider } from '../types/Provider'
+import { Provider } from './providers/Provider'
 import { checkWhiteboardConnection, createWhiteboardLink, deleteWhiteboardLink, getWhiteboardLink, setWhiteboardList } from './whiteboard'
 
 import type WebSocket from 'ws'
-import type { Connection } from '../types/Connection'
+import type { Connection } from '../connections/Connection'
 
 const mockCheckCollaboardConnection = jest.fn()
 const mockCheckConceptboardConnection = jest.fn()

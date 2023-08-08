@@ -1,4 +1,4 @@
-import type { Connection } from '../../types/Connection'
+import type { Connection } from './Connection'
 
 let connections: Connection[] = []
 

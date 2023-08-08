@@ -1,6 +1,6 @@
 import { addConnection, getConnectionByParticipant, getConnections, getConnectionsByConference, removeConnection, setConnections } from './connections'
 
-import type { Connection } from '../../types/Connection'
+import type { Connection } from './Connection'
 import type { WebSocket } from 'ws'
 
 beforeEach(() => {

@@ -3,12 +3,12 @@ import path from 'path'
 import { createWhiteboardLink } from '../../whiteboard/whiteboard'
 import { checkIfParticipantIsAllowed } from '../../infinity'
 import { WebsocketMessageType } from '../../types/WebsocketMessageType'
-import { getConnectionsByConference } from './connections'
+import { getConnectionsByConference } from '../../connections/connections'
 import { getLogger, logWs } from '../../logger'
 import { sendMessage } from './sendMessage'
 
-import type { Connection } from '../../types/Connection'
-import type { Provider } from '../../types/Provider'
+import type { Connection } from '../../connections/Connection'
+import type { Provider } from '../../whiteboard/providers/Provider'
 
 const logger = getLogger(path.basename(__filename))
 

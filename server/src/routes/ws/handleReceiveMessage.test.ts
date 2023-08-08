@@ -1,9 +1,9 @@
 import { handleReceiveMessage } from './handleReceiveMessage'
 import { WebsocketMessageType } from '../../types/WebsocketMessageType'
-import { setConnections } from './connections'
+import { setConnections } from '../../connections/connections'
 
 import type { WebSocket } from 'ws'
-import type { Connection } from '../../types/Connection'
+import type { Connection } from '../../connections/Connection'
 import type { WebSocketMessage } from '../../types/WebsocketMessage'
 
 const mockCreateWhiteboardLink = jest.fn((conn, msg) => conn.conference)
