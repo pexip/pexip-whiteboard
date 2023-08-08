@@ -7,6 +7,7 @@
   "javascript.preferences.quoteStyle": "single",
   "editor.rulers": [80,120],
   "eslint.workingDirectories": [
+    "./plugin",
     "./server"
   ]
 }

@@ -1,6 +1,6 @@
 export default {
-    base: './',
-    build: {
-        target: 'esnext',
-    },
-};
+  base: './',
+  build: {
+    target: 'esnext'
+  }
+}

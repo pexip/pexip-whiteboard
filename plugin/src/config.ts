@@ -3,8 +3,8 @@ interface Config {
   whiteboardProvider?: string
 }
 
-const response = await fetch('./config.json');
-const config: Config = await response.json();
+const response = await fetch('./config.json')
+const config: Config = await response.json()
 
 export {
   config
