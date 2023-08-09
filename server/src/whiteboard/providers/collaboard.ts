@@ -177,7 +177,7 @@ const createProject = async (authToken: string, projectName: string): Promise<nu
     })
   })
   if (result.status !== 200) {
-    throw Error('Cannot create a Collaboard project')
+    throw Error('Cannot create a Collaboard project.')
   }
   const jsonResult = await result.json()
   return jsonResult.ProjectId

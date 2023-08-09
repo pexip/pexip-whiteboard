@@ -12,18 +12,17 @@
   "whiteboard": {
     "defaultProvider": "collaboard",
     "providers": [{
+      "id": "collaboard",
+      "url": "https://api.collaboard.app",
+      "username": "testing.collaboard.videoconference@outlook.com",
+      "password": "3K*TKnCiy216",
+      "appUrl": "https://web.collaboard.app",
+      "appVersion": "6.1.0"
+    }, {
       "id": "conceptboard",
       "url": "https://prototyping.conceptboard.com"
     }]
   },
   "validateInfinityConference": false,
-  "verifyCertificates": true,
-  "": {
-    "id": "collaboard2",
-    "url": "https://api.collaboard.app",
-    "username": "testing.collaboard.videoconference@outlook.com",
-    "password": "3K*TKnCiy216",
-    "appUrl": "https://web.collaboard.app",
-    "appVersion": "6.1.0"
-  }
+  "verifyCertificates": true
 }
