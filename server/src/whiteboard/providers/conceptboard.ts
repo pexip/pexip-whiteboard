@@ -1,8 +1,10 @@
+import path from 'path'
 import config from 'config'
-import type { ConfigProvider } from '../../config'
 import { Provider } from './Provider'
 import { getLogger } from '../../logger'
-import path from 'path'
+
+import type { ConfigProvider } from '../../config'
+import type { WhiteboardInfo } from '../WhiteboardInfo'
 
 const logger = getLogger(path.basename(__filename))
 
@@ -15,16 +17,21 @@ const checkConceptboardConnection = async (): Promise<void> => {
   // TODO: To implement
 }
 
-const createConceptboardLink = async (conference: string): Promise<string> => {
+const createConceptboardLink = async (conference: string): Promise<WhiteboardInfo> => {
   const response = await fetch(`${url}/new`)
   if (response.status !== 200) {
     throw new Error('Cannot create the whiteboard')
   }
   logger.debug('Created Conceptboard link')
-  return response.url
+  return {
+    conference,
+    whiteboardId: '',
+    whiteboardLink: response.url,
+    provider: Provider.Conceptboard
+  }
 }
 
-const deleteConceptboardLink = async (conference: string): Promise<void> => {
+const deleteConceptboardLink = async (whiteboardInfo: WhiteboardInfo): Promise<void> => {
   // TODO: To implement
 }
 

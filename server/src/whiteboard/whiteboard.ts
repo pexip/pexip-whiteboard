@@ -13,14 +13,9 @@ import {
 import { getLogger } from '../logger'
 
 import type { Connection } from '../connections/Connection'
+import type { WhiteboardInfo } from './WhiteboardInfo'
 
 const logger = getLogger(path.basename(__filename))
-
-interface WhiteboardInfo {
-  conference: string
-  whiteboardLink: string
-  provider: Provider
-}
 
 let whiteboardList: WhiteboardInfo[] = []
 
@@ -50,26 +45,22 @@ const getWhiteboardLink = (conference: string): string | null => {
 
 const createWhiteboardLink = async (conn: Connection, provider: Provider): Promise<string> => {
   const conference = conn.conference
-  let link = ''
+  let whiteboardInfo: WhiteboardInfo
   switch (provider) {
     case Provider.Collaboard: {
-      link = await createCollaboardLink(conference)
+      whiteboardInfo = await createCollaboardLink(conference)
       break
     }
     case Provider.Conceptboard: {
-      link = await createConceptboardLink(conference)
+      whiteboardInfo = await createConceptboardLink(conference)
       break
     }
     default: {
       throw new Error('Unknown whiteboard provider')
     }
   }
-  whiteboardList.push({
-    conference,
-    whiteboardLink: link,
-    provider
-  })
-  return link
+  whiteboardList.push(whiteboardInfo)
+  return whiteboardInfo.whiteboardLink
 }
 
 const deleteWhiteboardLink = async (conference: string): Promise<void> => {
@@ -80,11 +71,11 @@ const deleteWhiteboardLink = async (conference: string): Promise<void> => {
 
   switch (whiteboardInfo.provider) {
     case Provider.Collaboard: {
-      await deleteCollaboardLink(conference)
+      await deleteCollaboardLink(whiteboardInfo)
       break
     }
     case Provider.Conceptboard: {
-      await deleteConceptboardLink(conference)
+      await deleteConceptboardLink(whiteboardInfo)
       break
     }
     default: {

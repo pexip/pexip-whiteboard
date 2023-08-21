@@ -4,6 +4,7 @@ import type { ConfigProvider } from '../../config'
 import { Provider } from './Provider'
 import { getLogger } from '../../logger'
 import path from 'path'
+import type { WhiteboardInfo } from '../WhiteboardInfo'
 
 const logger = getLogger(path.basename(__filename))
 
@@ -46,7 +47,7 @@ const checkCollaboardConnection = async (): Promise<void> => {
   await authenticateWithPassword()
 }
 
-const createCollaboardLink = async (conference: string): Promise<string> => {
+const createCollaboardLink = async (conference: string): Promise<WhiteboardInfo> => {
   const authToken = await authenticateWithPassword()
   let project: Project | null = null
   let end = false
@@ -69,11 +70,17 @@ const createCollaboardLink = async (conference: string): Promise<string> => {
   logger.debug('Created Collaboard project')
   const link = await createInvitationLink(authToken, projectId)
   logger.debug('Created Invitation for Collaboard project')
-  return link
+  return {
+    conference,
+    whiteboardId: projectId.toString(),
+    whiteboardLink: link,
+    provider: Provider.Collaboard
+  }
 }
 
-const deleteCollaboardLink = async (conference: string): Promise<void> => {
-  // TODO: To implement
+const deleteCollaboardLink = async (whiteboardInfo: WhiteboardInfo): Promise<void> => {
+  const authToken = await authenticateWithPassword()
+  await deleteProject(authToken, parseInt(whiteboardInfo.whiteboardId))
 }
 
 /**
