@@ -3,13 +3,14 @@ import { getLogger, logWs } from '../../logger'
 import { addConnection, getConnectionByParticipant } from '../../connections/connections'
 import { handleCloseConnection } from './handleCloseConnection'
 import { handleReceiveMessage } from './handleReceiveMessage'
+import { getWhiteboardLink } from '../../whiteboard/whiteboard'
+import { sendMessage } from './sendMessage'
+import { WebsocketMessageType } from '../../types/WebSocketMessageType'
 
 import type { Connection } from '../../connections/Connection'
 import type { WebSocket } from 'ws'
 import type { Request } from 'express'
-import { getWhiteboardLink } from '../../whiteboard/whiteboard'
-import { sendMessage } from './sendMessage'
-import { WebsocketMessageType } from '../../types/WebSocketMessageType'
+import type { WebSocketMessageBody } from '../../types/WebSocketMessageBody'
 
 const logger = getLogger(path.basename(__filename))
 
@@ -28,7 +29,10 @@ export const handleNewConnection = (ws: WebSocket, req: Request): void => {
   })
   const link = getWhiteboardLink(req.params.conference)
   if (link != null) {
-    const msg = sendMessage(newConnection, WebsocketMessageType.Invited, link)
+    const body: WebSocketMessageBody = {
+      link
+    }
+    const msg = sendMessage(newConnection, WebsocketMessageType.Invited, body)
     logWs({
       logger,
       connection: newConnection,

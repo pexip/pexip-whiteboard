@@ -1,6 +1,5 @@
 import { registerPlugin } from '@pexip/plugin-api'
 import { initializeButton } from './button'
-import { initializePanels } from './panel'
 import { subscribeEvents } from './events'
 import { setPlugin } from './plugin'
 
@@ -13,4 +12,3 @@ setPlugin(plugin)
 
 subscribeEvents()
 await initializeButton()
-initializePanels()

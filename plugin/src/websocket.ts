@@ -5,8 +5,8 @@ import {
   showInvitedPanel,
   showErrorPanel
 } from './panel'
-import { setWhiteboardLink } from './whiteboardLink'
 import { getPlugin } from './plugin'
+import { setPopUpLink } from './popUp'
 
 let ws: WebSocket
 let reconnectTimeout: NodeJS.Timeout
@@ -38,7 +38,7 @@ const onWebSocketMessage = async (event: any): Promise<void> => {
     case WebSocketMessageType.Created: {
       const link: string = message.body.link
       const shouldSendMessage = message.body.sendChatMessage === true
-      setWhiteboardLink(link)
+      setPopUpLink(link)
       if (shouldSendMessage) {
         await getPlugin().conference.sendMessage({
           payload: `Shared a new whiteboard: ${link}`
@@ -49,7 +49,7 @@ const onWebSocketMessage = async (event: any): Promise<void> => {
     }
     case WebSocketMessageType.Invited: {
       const link = message.body.link
-      setWhiteboardLink(link)
+      setPopUpLink(link)
       await showInvitedPanel(link)
       break
     }

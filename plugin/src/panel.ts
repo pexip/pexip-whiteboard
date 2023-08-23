@@ -1,22 +1,8 @@
-import type { Plugin, Prompt } from '@pexip/plugin-api'
+import type { Prompt } from '@pexip/plugin-api'
 import { getPlugin } from './plugin'
+import { closePopUp, getOpensPopUpParams, openPopUp } from './popUp'
 
-const popUpId = 'open-whiteboard-link'
-const popUpDimensions = 'width=800,height=600'
-
-let plugin: Plugin
 let currentPanel: Prompt
-let windowPopUpDifferentDomain: Window | null
-
-const initializePanels = (): void => {
-  plugin = getPlugin()
-  window.plugin.popupManager.add(popUpId, ctx => {
-    if (ctx.action === 'Open') {
-      return true
-    }
-    return false
-  })
-}
 
 const showCreatePanel = async (callback: () => Promise<void>): Promise<void> => {
   const title = 'Create whiteboard'
@@ -29,15 +15,15 @@ const showCreatePanel = async (callback: () => Promise<void>): Promise<void> => 
 const showCreatedSuccessfulPanel = async (link: string): Promise<void> => {
   const title = 'Whiteboard created'
   const description = 'You have created a whiteboard. ' +
-    'Do you want to open the whiteboard in a new tab?'
+    'Do you want to open the whiteboard in a new window?'
   await currentPanel?.remove()
   currentPanel = await createWhiteboardLinkPanel(title, description, link)
 }
 
 const showInvitedPanel = async (link: string): Promise<void> => {
-  const title = 'Whiteboard invitation'
-  const description = 'You have received a whiteboard invitation. ' +
-    'Do you want to open the whiteboard in a new tab?'
+  const title = 'Whiteboard shared'
+  const description = 'Another participant shared a whiteboard. ' +
+    'Do you want to open the whiteboard in a new window?'
   await currentPanel?.remove()
   currentPanel = await createWhiteboardLinkPanel(title, description, link)
 }
@@ -58,6 +44,8 @@ const showErrorPanel = async (error: string): Promise<void> => {
 }
 
 const createCallbackPanel = async (title: string, description: string, callback: () => Promise<void>): Promise<Prompt> => {
+  const plugin = getPlugin()
+
   const primaryAction = 'Continue'
   const panel = await plugin.ui.addPrompt({
     title,
@@ -77,72 +65,29 @@ const createCallbackPanel = async (title: string, description: string, callback:
 }
 
 const createWhiteboardLinkPanel = async (title: string, description: string, link: string): Promise<Prompt> => {
-  let panel: Prompt
+  const plugin = getPlugin()
 
-  // Check if the plugin is served from the same domain as Web App 3
-  let sameDomain: boolean = true
-  try {
-    // eslint-disable-next-line @typescript-eslint/no-unused-expressions
-    parent.document
-  } catch (e) {
-    sameDomain = false
-  }
-
-  if (sameDomain) {
-    panel = await createWhiteboardLinkPanelSameDomain(title, description, link)
-  } else {
-    panel = await createWhiteboardLinkPanelDifferentDomain(title, description, link)
-  }
-  return panel
-}
-
-const createWhiteboardLinkPanelSameDomain = async (title: string, description: string, link: string): Promise<Prompt> => {
   const primaryAction = 'Open'
 
-  window.plugin.popupManager.get(popUpId)?.close()
+  closePopUp()
 
-  const panel = await plugin.ui.addPrompt({
-    title,
-    description,
-    prompt: {
-      primaryAction,
-      secondaryAction: 'Cancel'
+  const panel = await plugin.ui.addPrompt(Object.assign(
+    {
+      title,
+      description,
+      prompt: {
+        primaryAction,
+        secondaryAction: 'Cancel'
+      }
     },
-    opensPopup: {
-      id: popUpId,
-      openParams: [
-        link,
-        '',
-        popUpDimensions
-      ]
-    }
-  })
-
-  panel.onInput.add(async (result: any) => {
-    await panel.remove()
-  })
-
-  return panel
-}
-
-const createWhiteboardLinkPanelDifferentDomain = async (title: string, description: string, link: string): Promise<Prompt> => {
-  const primaryAction = 'Open'
-
-  windowPopUpDifferentDomain?.close()
-
-  const panel = await plugin.ui.addPrompt({
-    title,
-    description,
-    prompt: {
-      primaryAction,
-      secondaryAction: 'Cancel'
-    }
-  })
+    getOpensPopUpParams()
+  ))
 
   panel.onInput.add(async (result: any) => {
     await panel.remove()
     if (result === primaryAction) {
-      windowPopUpDifferentDomain = window.open(link, '', popUpDimensions)
+      closePopUp()
+      openPopUp()
     }
   })
 
@@ -150,6 +95,8 @@ const createWhiteboardLinkPanelDifferentDomain = async (title: string, descripti
 }
 
 const createNotificationPanel = async (title: string, description: string): Promise<Prompt> => {
+  const plugin = getPlugin()
+
   const panel = await plugin.ui.addPrompt({
     title,
     description,
@@ -164,7 +111,6 @@ const createNotificationPanel = async (title: string, description: string): Prom
 }
 
 export {
-  initializePanels,
   showCreatePanel,
   showCreatedSuccessfulPanel,
   showInvitedPanel,
