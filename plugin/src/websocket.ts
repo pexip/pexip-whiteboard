@@ -6,6 +6,7 @@ import {
   showErrorPanel
 } from './panel'
 import { setWhiteboardLink } from './whiteboardLink'
+import { getPlugin } from './plugin'
 
 let ws: WebSocket
 let reconnectTimeout: NodeJS.Timeout
@@ -15,7 +16,6 @@ const connectWebSocket = (conference: string, participantUuid: string): void => 
   ws = new WebSocket(`${server}/ws/${conference}/${participantUuid}`)
   ws.onmessage = onWebSocketMessage
   ws.onclose = (event) => {
-    console.error(event)
     if (!event.wasClean) {
       tryReconnect(conference, participantUuid)
     }
@@ -36,13 +36,19 @@ const onWebSocketMessage = async (event: any): Promise<void> => {
   const message = JSON.parse(event.data)
   switch (message.type) {
     case WebSocketMessageType.Created: {
-      const link = message.body
+      const link: string = message.body.link
+      const shouldSendMessage = message.body.sendChatMessage === true
       setWhiteboardLink(link)
+      if (shouldSendMessage) {
+        await getPlugin().conference.sendMessage({
+          payload: `Shared a new whiteboard: ${link}`
+        })
+      }
       await showCreatedSuccessfulPanel(link)
       break
     }
     case WebSocketMessageType.Invited: {
-      const link = message.body
+      const link = message.body.link
       setWhiteboardLink(link)
       await showInvitedPanel(link)
       break

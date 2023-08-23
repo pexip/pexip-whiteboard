@@ -62,7 +62,7 @@ const notifyWhiteboardCreated = (conn: Connection, link: string): void => {
     const body: WebSocketMessageBody = {
       link
     }
-    const isSendToChatActive: boolean = config.has('sendLinkToChat') && config.get('sendLinkToChat')
+    const isSendToChatActive: boolean = config.has('sendChatMessage') && config.get('sendChatMessage')
     if (isCreator && isSendToChatActive) {
       body.sendChatMessage = true
     }

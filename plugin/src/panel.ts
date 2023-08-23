@@ -1,4 +1,5 @@
 import type { Plugin, Prompt } from '@pexip/plugin-api'
+import { getPlugin } from './plugin'
 
 const popUpId = 'open-whiteboard-link'
 const popUpDimensions = 'width=800,height=600'
@@ -7,8 +8,8 @@ let plugin: Plugin
 let currentPanel: Prompt
 let windowPopUpDifferentDomain: Window | null
 
-const initializePanels = (pluginRcv: Plugin): void => {
-  plugin = pluginRcv
+const initializePanels = (): void => {
+  plugin = getPlugin()
   window.plugin.popupManager.add(popUpId, ctx => {
     if (ctx.action === 'Open') {
       return true

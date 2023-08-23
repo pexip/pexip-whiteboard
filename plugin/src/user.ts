@@ -1,3 +1,5 @@
+import type { Participant } from '@pexip/plugin-api'
+
 declare enum CallType {
   audio = 'audio',
   video = 'video',
@@ -47,7 +49,15 @@ interface InfinityParticipant {
 let user: InfinityParticipant
 
 const setUser = (participant: InfinityParticipant): void => {
-  user = participant
+  /**
+   * TODO: Adapt this part. Now instead of the participant we have an object
+   * with the following structure:
+   * {
+   *   "id": "main",
+   *   "participant": {...}
+   * }
+   */
+  user = (participant as any).participant as Participant
 }
 
 const getUser = (): InfinityParticipant => {
