@@ -6,10 +6,20 @@ import type { Connection } from '../connections/Connection'
 
 const mockCheckCollaboardConnection = jest.fn()
 const mockCheckConceptboardConnection = jest.fn()
-const mockCreateCollaboardLink = jest.fn(async (conference: string) => await Promise.resolve(conference))
-const mockCreateConceptboardLink = jest.fn(async (conference: string) => await Promise.resolve(conference))
-const mockDeleteCollaboardLink = jest.fn(async (conference: string) => await Promise.resolve(conference))
-const mockDeleteConceptboardLink = jest.fn(async (conference: string) => await Promise.resolve(conference))
+const mockCreateCollaboardLink = jest.fn(async (conference: string) => await Promise.resolve({
+  conference,
+  whiteboardId: '1234',
+  whiteboardLink: conference,
+  provider: Provider.Collaboard
+}))
+const mockCreateConceptboardLink = jest.fn(async (conference: string) => await Promise.resolve({
+  conference,
+  whiteboardId: '1234',
+  whiteboardLink: conference,
+  provider: Provider.Conceptboard
+}))
+const mockDeleteCollaboardLink = jest.fn(async (conference: string) => await Promise.resolve(null))
+const mockDeleteConceptboardLink = jest.fn(async (conference: string) => await Promise.resolve(null))
 
 jest.mock('./providers/collaboard', () => ({
   checkCollaboardConnection: (provider: Provider) => mockCheckCollaboardConnection(provider),
@@ -54,6 +64,7 @@ describe('getWhiteboardLink', () => {
     setWhiteboardList([{
       conference,
       provider: Provider.Collaboard,
+      whiteboardId: '1234',
       whiteboardLink
     }])
     const link = getWhiteboardLink(conference)
@@ -65,6 +76,7 @@ describe('getWhiteboardLink', () => {
     setWhiteboardList([{
       conference,
       provider: Provider.Collaboard,
+      whiteboardId: '1234',
       whiteboardLink
     }])
     const link = getWhiteboardLink('wrong-conference')
@@ -116,6 +128,7 @@ describe('deleteWhiteboardLink', () => {
     mockDeleteConceptboardLink.mockClear()
     setWhiteboardList([{
       conference,
+      whiteboardId: '1234',
       whiteboardLink: link,
       provider: Provider.Collaboard
     }])
@@ -130,6 +143,7 @@ describe('deleteWhiteboardLink', () => {
   it('should call deleteCollaboardLink if provider is collaboard', async () => {
     setWhiteboardList([{
       conference,
+      whiteboardId: '1234',
       whiteboardLink: link,
       provider: Provider.Collaboard
     }])
@@ -140,6 +154,7 @@ describe('deleteWhiteboardLink', () => {
   it('should call deleteConceptboardLink if provider is conceptboard', async () => {
     setWhiteboardList([{
       conference,
+      whiteboardId: '1234',
       whiteboardLink: link,
       provider: Provider.Conceptboard
     }])

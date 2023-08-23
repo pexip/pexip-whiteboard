@@ -3,6 +3,14 @@ import { handleCloseConnection } from './handleCloseConnection'
 import type { WebSocket } from 'ws'
 import type { Connection } from '../../connections/Connection'
 
+const conn: Connection = {
+  ws: null as unknown as WebSocket,
+  conference: 'my-conference',
+  participantUuid: 'participantUuid'
+}
+
+let connections: Connection[] = []
+
 const mockDeleteWhiteboardLink = jest.fn(async (conference: string) => await Promise.resolve(null))
 jest.mock('../../whiteboard/whiteboard', () => ({
   deleteWhiteboardLink: async (conference: string) => await mockDeleteWhiteboardLink(conference)
@@ -10,6 +18,7 @@ jest.mock('../../whiteboard/whiteboard', () => ({
 
 const mockRemoveConnection = jest.fn()
 jest.mock('../../connections/connections', () => ({
+  getConnections: jest.fn(() => connections),
   removeConnection: (conn: Connection) => mockRemoveConnection(conn)
 }))
 
@@ -17,14 +26,10 @@ describe('handleCloseConnection', () => {
   beforeEach(() => {
     mockDeleteWhiteboardLink.mockClear()
     mockRemoveConnection.mockClear()
+    connections = [conn]
   })
 
   it('should call deleteWhiteboardLink', () => {
-    const conn: Connection = {
-      ws: null as unknown as WebSocket,
-      conference: 'my-conference',
-      participantUuid: 'participantUuid'
-    }
     handleCloseConnection(conn)
     expect(mockDeleteWhiteboardLink).toBeCalledTimes(1)
     expect(mockDeleteWhiteboardLink).toBeCalledWith(conn.conference)

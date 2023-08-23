@@ -2,13 +2,14 @@ import config from 'config'
 import path from 'path'
 import { createWhiteboardLink } from '../../whiteboard/whiteboard'
 import { checkIfParticipantIsAllowed } from '../../infinity'
-import { WebsocketMessageType } from '../../types/WebsocketMessageType'
+import { WebsocketMessageType } from '../../types/WebSocketMessageType'
 import { getConnectionsByConference } from '../../connections/connections'
 import { getLogger, logWs } from '../../logger'
 import { sendMessage } from './sendMessage'
 
 import type { Connection } from '../../connections/Connection'
 import type { Provider } from '../../whiteboard/providers/Provider'
+import type { WebSocketMessageBody } from '../../types/WebSocketMessageBody'
 
 const logger = getLogger(path.basename(__filename))
 
@@ -58,7 +59,13 @@ const notifyWhiteboardCreated = (conn: Connection, link: string): void => {
   connections?.forEach((c: Connection) => {
     const isCreator = c.participantUuid === conn.participantUuid
     const type = isCreator ? WebsocketMessageType.Created : WebsocketMessageType.Invited
-    const body = link
+    const body: WebSocketMessageBody = {
+      link
+    }
+    const isSendToChatActive: boolean = config.has('sendLinkToChat') && config.get('sendLinkToChat')
+    if (isCreator && isSendToChatActive) {
+      body.sendChatMessage = true
+    }
     const msg = sendMessage(c, type, body)
     logWs({
       logger,

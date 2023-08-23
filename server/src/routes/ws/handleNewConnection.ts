@@ -9,7 +9,7 @@ import type { WebSocket } from 'ws'
 import type { Request } from 'express'
 import { getWhiteboardLink } from '../../whiteboard/whiteboard'
 import { sendMessage } from './sendMessage'
-import { WebsocketMessageType } from '../../types/WebsocketMessageType'
+import { WebsocketMessageType } from '../../types/WebSocketMessageType'
 
 const logger = getLogger(path.basename(__filename))
 

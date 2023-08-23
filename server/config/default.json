@@ -23,6 +23,7 @@
       "url": "https://prototyping.conceptboard.com"
     }]
   },
+  "sendLinkToChat": false,
   "validateInfinityConference": false,
   "verifyCertificates": true
 }
