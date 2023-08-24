@@ -1,8 +1,20 @@
 import type { Prompt } from '@pexip/plugin-api'
 import { getPlugin } from './plugin'
-import { closePopUp, getOpensPopUpParams, openPopUp } from './popUp'
+import { closePopUp, getOpensPopUpParams, isSameDomain, openPopUp, popUpIdPanel } from './popUp'
 
 let currentPanel: Prompt
+
+const initializePanels = (): void => {
+  if (isSameDomain()) {
+    window.plugin.popupManager.add(popUpIdPanel, ctx => {
+      if (ctx.action === 'Open') {
+        currentPanel.remove().catch((e) => { console.error(e) })
+        return true
+      }
+      return false
+    })
+  }
+}
 
 const showCreatePanel = async (callback: () => Promise<void>): Promise<void> => {
   const title = 'Create whiteboard'
@@ -71,6 +83,18 @@ const createWhiteboardLinkPanel = async (title: string, description: string, lin
 
   closePopUp()
 
+  console.log('Whiteboard Link')
+  console.log(Object.assign(
+    {
+      title,
+      description,
+      prompt: {
+        primaryAction,
+        secondaryAction: 'Cancel'
+      }
+    },
+    getOpensPopUpParams(popUpIdPanel)
+  ))
   const panel = await plugin.ui.addPrompt(Object.assign(
     {
       title,
@@ -80,16 +104,18 @@ const createWhiteboardLinkPanel = async (title: string, description: string, lin
         secondaryAction: 'Cancel'
       }
     },
-    getOpensPopUpParams()
+    getOpensPopUpParams(popUpIdPanel)
   ))
 
-  panel.onInput.add(async (result: any) => {
-    await panel.remove()
-    if (result === primaryAction) {
-      closePopUp()
-      openPopUp()
-    }
-  })
+  if (!isSameDomain()) {
+    panel.onInput.add(async (result: any) => {
+      await panel.remove()
+      if (result === primaryAction) {
+        closePopUp()
+        openPopUp()
+      }
+    })
+  }
 
   return panel
 }
@@ -111,6 +137,7 @@ const createNotificationPanel = async (title: string, description: string): Prom
 }
 
 export {
+  initializePanels,
   showCreatePanel,
   showCreatedSuccessfulPanel,
   showInvitedPanel,

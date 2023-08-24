@@ -7,6 +7,7 @@ import {
 } from './panel'
 import { getPlugin } from './plugin'
 import { setPopUpLink } from './popUp'
+import { setButtonLink } from './button'
 
 let ws: WebSocket
 let reconnectTimeout: NodeJS.Timeout
@@ -45,12 +46,14 @@ const onWebSocketMessage = async (event: any): Promise<void> => {
         })
       }
       await showCreatedSuccessfulPanel(link)
+      await setButtonLink(link)
       break
     }
     case WebSocketMessageType.Invited: {
       const link = message.body.link
       setPopUpLink(link)
       await showInvitedPanel(link)
+      await setButtonLink(link)
       break
     }
     case WebSocketMessageType.Error: {
