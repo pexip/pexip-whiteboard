@@ -56,6 +56,7 @@ The file `default.json` defines the configuration for this back-end service. We 
 | whiteboard.providers[].password | **Only for Collaboard.** Password to the whiteboard API. |
 | whiteboard.providers[].appUrl | **Only for Collaboard.** URL for the Collaboard Web App. |
 | whiteboard.providers[].appVersion | **Only for Collaboard.** Version of the Collaboard Web App.|
+| sendLinkToChat | Send the Whiteboard link created by the conference to the chat. The user that will send the link will be the same that created the whiteboard.
 | validateInfinityConference | No validate the conference and participantUuid into Infinity. | 
 | verifyCertificates | Ignore the certificates from other servers (Infinity and whiteboard provider). This should always be `true` in production. |
 

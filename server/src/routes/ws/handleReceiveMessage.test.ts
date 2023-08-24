@@ -1,10 +1,10 @@
 import { handleReceiveMessage } from './handleReceiveMessage'
-import { WebsocketMessageType } from '../../types/WebsocketMessageType'
+import { WebsocketMessageType } from '../../types/WebSocketMessageType'
 import { setConnections } from '../../connections/connections'
 
 import type { WebSocket } from 'ws'
 import type { Connection } from '../../connections/Connection'
-import type { WebSocketMessage } from '../../types/WebsocketMessage'
+import type { WebSocketMessage } from '../../types/WebSocketMessage'
 
 const mockCreateWhiteboardLink = jest.fn((conn, msg) => conn.conference)
 jest.mock('../../whiteboard/whiteboard', () => ({
@@ -87,9 +87,15 @@ describe('handleReceiveMessage', () => {
     setConnections([conn, conn1, conn2, conn3])
     await handleReceiveMessage(conn, JSON.stringify(msg))
     expect(mockSendMessage).toBeCalledTimes(3)
-    expect(mockSendMessage).toBeCalledWith(conn, WebsocketMessageType.Created, conn.conference)
-    expect(mockSendMessage).toBeCalledWith(conn1, WebsocketMessageType.Invited, conn.conference)
-    expect(mockSendMessage).toBeCalledWith(conn2, WebsocketMessageType.Invited, conn.conference)
+    expect(mockSendMessage).toBeCalledWith(conn, WebsocketMessageType.Created, {
+      link: conn.conference
+    })
+    expect(mockSendMessage).toBeCalledWith(conn1, WebsocketMessageType.Invited, {
+      link: conn.conference
+    })
+    expect(mockSendMessage).toBeCalledWith(conn2, WebsocketMessageType.Invited, {
+      link: conn.conference
+    })
   })
 
   it('should deliver an error message if the whiteboard cannot be created', async () => {

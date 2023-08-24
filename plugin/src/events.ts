@@ -1,16 +1,18 @@
-import type { Plugin } from '@pexip/plugin-api'
 import {
   connectWebSocket,
   disconnectWebSocket,
   getWebSocket
 } from './websocket'
-import { getUser, setUser } from './user'
+import { getCleanParticipant, getUser, setUser } from './user'
+import { getPlugin } from './plugin'
 
 let conference: string
 
-const subscribeEvents = (plugin: Plugin): void => {
+const subscribeEvents = (): void => {
+  const plugin = getPlugin()
+
   plugin.events.me.add((participant) => {
-    setUser(participant)
+    setUser(getCleanParticipant(participant))
   })
 
   plugin.events.authenticatedWithConference.add(({ conferenceAlias }) => {
@@ -19,7 +21,7 @@ const subscribeEvents = (plugin: Plugin): void => {
 
   plugin.events.participantJoined.add((participant) => {
     const participantUuid = getUser().uuid
-    if (participant.uuid === participantUuid) {
+    if (getCleanParticipant(participant).uuid === participantUuid) {
       if (getWebSocket() != null) {
         disconnectWebSocket()
       }
@@ -28,7 +30,7 @@ const subscribeEvents = (plugin: Plugin): void => {
   })
 
   plugin.events.participantLeft.add((participant) => {
-    if (participant.uuid === getUser().uuid) {
+    if (getCleanParticipant(participant).uuid === getUser().uuid) {
       disconnectWebSocket()
     }
   })

@@ -1,7 +1,7 @@
 import { handleNewConnection } from './handleNewConnection'
 import { setWhiteboardList } from '../../whiteboard/whiteboard'
 import { Provider } from '../../whiteboard/providers/Provider'
-import { WebsocketMessageType } from '../../types/WebsocketMessageType'
+import { WebsocketMessageType } from '../../types/WebSocketMessageType'
 import { setConnections } from '../../connections/connections'
 
 import type { WebSocket } from 'ws'
@@ -107,6 +107,7 @@ describe('handleNewConnection', () => {
     setWhiteboardList([{
       conference: req.params.conference,
       provider: Provider.Conceptboard,
+      whiteboardId: '1234',
       whiteboardLink: 'link'
     }])
     handleNewConnection(ws, req)
