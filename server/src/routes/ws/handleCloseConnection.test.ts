@@ -13,6 +13,7 @@ let connections: Connection[] = []
 
 const mockDeleteWhiteboardLink = jest.fn(async (conference: string) => await Promise.resolve(null))
 jest.mock('../../whiteboard/whiteboard', () => ({
+  getWhiteboardLink: () => 'link',
   deleteWhiteboardLink: async (conference: string) => await mockDeleteWhiteboardLink(conference)
 }))
 

@@ -1,6 +1,6 @@
 import path from 'path'
 import { getLogger, logWs } from '../../logger'
-import { deleteWhiteboardLink } from '../../whiteboard/whiteboard'
+import { deleteWhiteboardLink, getWhiteboardLink } from '../../whiteboard/whiteboard'
 import { getConnections, removeConnection } from '../../connections/connections'
 
 import type { Connection } from '../../connections/Connection'
@@ -18,15 +18,21 @@ const handleCloseConnection = (conn: Connection): void => {
   const participantsNumber = connections.filter((connection) => connection.conference === conn.conference).length
   if (participantsNumber === 1) {
     logger.info(`The last participant from conference "${conn.conference}" left.`)
-    logger.info(`Removing whiteboard for "${conn.conference}...`)
-    deleteWhiteboardLink(conn.conference).catch((e) => {
-      logWs({
-        logger,
-        level: 'error',
-        connection: conn,
-        message: e
+    logger.info(`Removing whiteboard for "${conn.conference}"...`)
+    if (getWhiteboardLink(conn.conference) != null) {
+      deleteWhiteboardLink(conn.conference).then(() => {
+        logger.info(`The whiteboard for "${conn.conference}" was removed.`)
+      }).catch((e) => {
+        logWs({
+          logger,
+          level: 'error',
+          connection: conn,
+          message: e?.message
+        })
       })
-    })
+    } else {
+      logger.info(`The conference "${conn.conference}" doesn't have a whiteboard.`)
+    }
   }
   removeConnection(conn)
 }

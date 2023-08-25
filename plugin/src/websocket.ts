@@ -11,6 +11,7 @@ import { setButtonLink } from './button'
 
 let ws: WebSocket
 let reconnectTimeout: NodeJS.Timeout
+let pingPongInterval: NodeJS.Timeout
 
 const connectWebSocket = (conference: string, participantUuid: string): void => {
   const server = config.server
@@ -21,10 +22,14 @@ const connectWebSocket = (conference: string, participantUuid: string): void => 
       tryReconnect(conference, participantUuid)
     }
   }
+  ws.onopen = (event) => {
+    pingPongInterval = setInterval(sendPing, 30000)
+  }
 }
 
 const disconnectWebSocket = (): void => {
   clearTimeout(reconnectTimeout)
+  clearInterval(pingPongInterval)
   ws.close()
 }
 
@@ -61,6 +66,9 @@ const onWebSocketMessage = async (event: any): Promise<void> => {
       await showErrorPanel(error)
       break
     }
+    case WebSocketMessageType.PONG: {
+      break
+    }
   }
 }
 
@@ -70,6 +78,10 @@ const tryReconnect = (conference: string, participantUuid: string): void => {
   reconnectTimeout = setTimeout(() => {
     connectWebSocket(conference, participantUuid)
   }, timeout)
+}
+
+const sendPing = (): void => {
+  ws.send(JSON.stringify({ type: WebSocketMessageType.PING }))
 }
 
 export {

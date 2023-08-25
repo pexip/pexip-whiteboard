@@ -27,6 +27,10 @@ const handleReceiveMessage = async (conn: Connection, msg: string): Promise<void
       }
       break
     }
+    case WebsocketMessageType.PING: {
+      conn.ws.send(JSON.stringify({ type: WebsocketMessageType.PONG }))
+      break
+    }
     default: {
       error = 'Unsupported message type'
     }

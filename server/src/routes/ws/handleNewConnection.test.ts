@@ -113,6 +113,6 @@ describe('handleNewConnection', () => {
     handleNewConnection(ws, req)
     expect(mockSendMessage).toBeCalledTimes(1)
     expect(JSON.stringify(mockSendMessage.mock.calls[0][0])).toBe(JSON.stringify(conn))
-    expect(mockSendMessage).toBeCalledWith(expect.anything(), WebsocketMessageType.Invited, 'link')
+    expect(mockSendMessage).toBeCalledWith(expect.anything(), WebsocketMessageType.Invited, { link: 'link' })
   })
 })
