@@ -115,6 +115,10 @@ const createWhiteboardLinkPanel = async (title: string, description: string, lin
         openPopUp()
       }
     })
+  } else {
+    panel.onInput.add(async () => {
+      await panel.remove()
+    })
   }
 
   return panel

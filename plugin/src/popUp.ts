@@ -7,19 +7,6 @@ const popUpDimensions = 'width=800,height=600'
 let whiteboardLink = ''
 let windowPopUpDifferentDomain: Window | null
 
-// export const initPopUp = (): void => {
-//   if (isSameDomain()) {
-//     window.plugin.popupManager.add(popUpId, ctx => {
-//       console.log('pop-up-manager')
-//       console.log(ctx)
-//       if (ctx.action === 'Open') {
-//         return true
-//       }
-//       return false
-//     })
-//   }
-// }
-
 export const setPopUpLink = (link: string): void => {
   whiteboardLink = link
 }
