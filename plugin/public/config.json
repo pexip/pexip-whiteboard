@@ -1,4 +1,5 @@
 {
   "server": "ws://localhost:3000",
-  "whiteboardProvider": "collaboard"
+  "provider": "collaboard",
+  "userAuthentication": true
 }

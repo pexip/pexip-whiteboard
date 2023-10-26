@@ -1,0 +1,36 @@
+@startuml create-sequence-diagram
+!theme cerulean
+' skinparam sequenceMessageAlign center
+
+actor "Host" as host
+participant "Whiteboared Server" as server
+participant "Collaboard Server" as collaboard
+
+== Initialization ==
+
+host <--> server: wss://<domain>/<conferenceAlias>\n/<participantUuid>
+
+== User Authentication ==
+host -> server: WSS
+note right
+{
+  type: 'authenticate',
+  provider: <collaboard | conceptboard>
+  authProvider: 'password'
+  username: <username>
+  password: <password>
+}
+end note
+
+
+== Finish process ==
+
+server -> host: WSS
+note right
+{
+  type: 'authenticated',
+  whiteboardAuthToken: <token>
+}
+end note
+
+@enduml

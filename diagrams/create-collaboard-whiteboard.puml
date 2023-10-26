@@ -1,0 +1,76 @@
+@startuml create-sequence-diagram
+!theme cerulean
+' skinparam sequenceMessageAlign center
+
+actor "Host" as host
+actor "Guest" as guest
+participant "Whiteboared Server" as server
+participant "Infinity Server" as infinity
+participant "Collaboard Server" as collaboard
+
+== Initialization ==
+host <--> infinity: Join conference
+guest <---> infinity: Join conference
+
+host <--> server: wss://<domain>/<conferenceAlias>\n/<participantUuid>
+guest <---> server: wss://<domain>/<conferenceAlias>\n/<participantUuid>
+
+== Start process ==
+host -> server: WSS
+note right
+{
+  type: 'create',
+  provider: <collaboard | conceptboard>
+  whiteboardAuthToken?: <authToken>
+}
+end note
+== Verify info ==
+
+server -> infinity: HTTP GET /api/admin/status/v1/participant/?conference=<conferenceId>
+infinity -> server: return participants
+
+server -> server: Check if the error in request
+server -> server: Check if participant is in conference
+server -> server: Check if host
+
+== Create collaboard link ==
+
+server -> collaboard: authenticate(username, password)
+
+collaboard -> server: return collaboardAuthToken
+note left
+Only needed to authenticate
+if the whiteboardAuthToken
+wasn't provided
+end note
+server -> collaboard: getProjects()
+collaboard -> server: return projectList
+
+server -> collaboard: deleteProject\n(projectId)
+collaboard -> server: return 204 No content
+
+server -> collaboard: createProject(conferenceAlias)
+collaboard -> server: return projectId
+
+server -> collaboard: shareProject(projectId)
+collaboard -> server: return link
+
+== Finish process ==
+
+server -> host: WSS
+note right
+{
+  type: CREATED,
+  link
+}
+end note
+server -> guest: WSS
+
+note right
+{
+  type: INVITED,
+  link
+}
+end note
+
+@enduml

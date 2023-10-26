@@ -1,0 +1,33 @@
+@startuml architecture
+!theme cerulean
+
+skinparam FooterFontColor gray
+skinparam FooterFontStyle left
+
+title Host creates and connects to whiteboard
+
+actor "Host" as host
+usecase "Whiteboard Server" as server
+cloud "Whiteboard Provider (Collaboard/Conceptboard)" as provider
+usecase "Infinity Conferencing Node" as conference
+usecase "Infinity Management Node" as management
+
+' Host create the whiteboard
+host --> conference: 1. https
+host <--> server: 2 and 5. wss
+server --> management: 3. https
+server --> provider: 4. https
+host --> provider: 6. https
+conference --> management: IPSec
+
+footer
+Notes about the process:
+1. User connects the WebApp 3 URL with the plugin.
+2. The plugin establish a websocket and share a command "CREATE".
+3. The Whiteboard check that the participantUuid exists, it is from a user in the conference and has host role.
+4. Make requests to the provider to create the whiteboard and create a link.
+5. Share the link with the host and other users through a websocket.
+6. The plugin open a new pop-up window with the web app from the whiteboard provider.
+end footer
+
+@enduml
